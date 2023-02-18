@@ -1,0 +1,421 @@
+import tables from '../utils/tables.js';
+import isObject from 'lodash.isobject';
+import isString from 'lodash.isstring';
+import { makeArray } from '../../utils/index.js';
+
+const GERNERIC_ERROR_MSG = 'An error occurred while executing the DB operation.';
+
+export default class BaseDao {
+
+    constructor() {
+        this.tableName = null;
+        this.schema = {};
+        this.hidden = ['tenant_id', 'deleted_at'];
+        this.tables = tables;
+    }
+
+
+    getSchema() {
+        return this.schema;
+    }
+
+
+    isSoftDelete() {
+        return this.hidden.includes('deleted_at')
+    }
+
+
+    getAllColumns(includeHiddenCols) {
+        let keys = Object.keys(this.schema);
+
+        if(!includeHiddenCols) {
+            keys = keys.filter(key => !this.hidden.includes(key))
+        }
+
+        // using a Set will de-dupe the column names
+        const colNameSet = new Set(keys);
+        return Array.from(colNameSet);
+    }
+
+
+    fetchOne(knex, whereConfig, includeHiddenCols) {
+        try {
+            const qb = knex
+                .select(this.getAllColumns(includeHiddenCols))
+                .from(this.tableName)
+                .where(whereConfig);
+
+            if(this.schema.deleted_at) {
+                qb.whereNull('deleted_at')
+            }
+
+            return qb.first();
+        }
+        catch(err) {
+            console.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    /*
+    * Deletes one row
+    * http://knexjs.org/#Builder-del%20/%20delete
+    */
+    deleteOne(knex, id) {
+        try {
+            const qb = knex
+                .returning('id')
+                .where({
+                    id: id
+                });
+
+            if(this.isSoftDelete()) {
+                return qb.whereNull('deleted_at').update({
+                    deleted_at: this.knex.fn.now()
+                });
+            }
+
+            // or hard delete
+            return qb.del();
+        }
+        catch(err) {
+            global.logger.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    async update(knex, id, data) {
+        try {
+            const payload = {...data};
+            delete payload.id;
+
+            const qb = knex
+                .returning('id')
+                .where({
+                    id: id
+                });
+
+            if(this.isSoftDelete()) {
+                qb.whereNull('deleted_at')
+            }
+
+            // awaiting the reponse will cause errors to be caught
+            // in the catch block.  Otherwise the errors will be returned,
+            // which may lead DB query info
+            const response = await qb.update(payload);
+            return response;
+        }
+        catch(err) {
+            global.logger.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    async tenantUpdate(knex, id, data) {
+        try {
+            const payload = {...data};
+            payload.tenant_id = knex.tenant_id;
+
+            const response = await this.update(knex, id, payload);
+            return response;
+        }
+        catch(err) {
+            global.logger.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    async create(knex, data) {
+        try {
+            // awaiting the reponse will cause errors to be caught
+            // in the catch block.  Otherwise the errors will be returned,
+            // which may lead DB query info
+            const response = await knex
+                .returning('id')
+                .insert(data)
+                .into(this.tableName);
+
+            return response;
+        }
+        catch(err) {
+            console.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    async tenantCreate(knex, data) {
+        try {
+            const payload = {...data};
+            payload.tenant_id = knex.tenant_id;
+
+            return this.create(knex, payload);
+        }
+        catch(err) {
+            console.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    /**
+     * Returns
+     * @param {*} data
+     * @returns
+     */
+    // buildUpsertPayload(data) {
+    //     const payload = {};
+
+    //     for(let key in data) {
+    //         if(this.schema.hasOwnProperty(key)) {
+    //             payload[key] = data[key];
+    //         }
+    //     }
+
+    //     return payload;
+    // }
+
+
+    parseQuery(query) {
+        if(isObject(query)) {
+            for(let key in query) {
+                const orig = query[key];
+
+                try {
+                    if(isString(query[key])) {
+                        query[key] = JSON.parse(query[key]);
+                    }
+                }
+                catch(err) {
+                    query[key] = orig
+                }
+            }
+        }
+    }
+
+    /**
+     * This pattern was inspired by: https://strapi.oschina.io/documentation/v3.x/content-api/parameters.html#available-operators
+     * Knex query builder cheat sheet:  https://devhints.io/knex
+     *
+     * No suffix or eq: Equals
+     * ne: Not equals
+     * lt: Less than
+     * gt: Greater than
+     * lte: Less than or equal to
+     * gte: Greater than or equal to
+     * in: Included in an array of values
+     * nin: Isn't included in an array of values
+     * like: %like%
+     * null: Is null/Is not null
+     *
+     * https://knexjs.org/#Builder-wheres
+     */
+    buildFilters(query, qb) {
+        // const parsed = qs.parse(query);
+        this.parseQuery(query);
+
+        const operators = {
+            eq: 'eq',
+            ne: 'ne',
+            lt: 'lt',
+            gt: 'gt',
+            lte: 'lte',
+            gte: 'gte',
+            in: 'in',
+            nin: 'nin',
+            like: 'like',
+            null: 'null',
+            bitwise_and_gt: 'bitwise_and_gt'
+        }
+
+        const blacklist = [
+            '_pageSize',
+            '_page',
+            '_sort',
+            '_withRelated'
+        ];
+
+        let whereUsed = false;
+
+        const addWhere = (prop, operator, value) => {
+            if(!whereUsed) {
+                qb.where(prop, operator, value);
+                whereUsed = true;
+            }
+            else {
+                qb.andWhere(prop, operator, value);
+            }
+        }
+
+        const trimArray = (arr) => {
+            const clean = [];
+
+            arr.forEach((item) => {
+                const trimmed = item.trim();
+                if(trimmed) {
+                    clean.push(trimmed)
+                }
+            });
+
+            return clean;
+        }
+
+        for(let prop in query) {
+            let operator = operators.eq;
+            let propValue = query[prop];
+
+            // an operator modifier is an object
+            // with only one key, which is one of the
+            // keys in 'operators'
+            if(isObject(query[prop])) {
+                const keys = Object.keys(query[prop]);
+
+                if(keys.length === 1 && operators.hasOwnProperty(keys[0])) {
+                    operator = keys[0];
+                    propValue = query[prop][operator];
+                }
+            }
+
+            if(!blacklist.includes(prop)) {
+                switch(operator) {
+                    case operators.eq:
+                        addWhere(prop, '=', propValue)
+                        break;
+
+                    case operators.ne:
+                        addWhere(prop, '!=', propValue)
+                        break;
+
+                    case operators.lt:
+                        addWhere(prop, '<', propValue)
+                        break;
+
+                    case operators.gt:
+                        addWhere(prop, '>', propValue)
+                        break;
+
+                    case operators.lte:
+                        addWhere(prop, '<=', propValue)
+                        break;
+
+                    case operators.gte:
+                        addWhere(prop, '>=', propValue)
+                        break;
+
+                    case operators.in:
+                        qb.whereIn(prop, trimArray(propValue));
+                        break;
+
+                    case operators.nin:
+                        qb.whereNotIn(prop, trimArray(propValue));
+                        break;
+
+                    case operators.like:
+                        addWhere(prop, 'LIKE', propValue);
+                        break;
+
+                    case operators.null:
+                        if(propValue === 'true' || propValue === true) {
+                            qb.whereNull(prop);
+                        }
+                        else {
+                            qb.whereNotNull(prop);
+                        }
+                        break;
+
+                    case operators.bitwise_and_gt:
+                        // qb.whereRaw(`${prop} & ? > 0`, [propValue])
+                        qb.whereRaw(`${prop} & ? > ${parseFloat(propValue.right)}`, [propValue.left])
+                        break;
+
+                    case operators.jsonb:
+                        qb.whereRaw(`?? @> ?::jsonb`, [
+                            prop,
+                            (isObject(propValue) || Array.isArray(propValue) ? JSON.stringify(propValue) : propValue)
+                        ])
+                        break;
+                }
+            }
+        }
+    }
+
+
+    paginate(params, qb) {
+        return qb.paginate({
+            perPage: params?._pageSize || 100,
+            currentPage: params?._page || 1
+        });
+    }
+
+
+    sanitize(results) {
+        const arr = Array.isArray(results) ? results : [results];
+
+        const clean = arr.map((obj) => {
+            this.hidden.forEach((key) => {
+                delete obj[key];
+            });
+            return obj;
+        });
+
+        return clean;
+    }
+
+
+    stripInvalidCols(data) {
+        const cols = this.getAllColumns();
+        const validData = {};
+
+        for(const key in data) {
+            if(cols.includes(key)) {
+                validData[key] = data[key];
+            }
+        }
+
+        return validData;
+    }
+
+
+    prepareForUpsert(data) {
+        const doClean = (obj) => {
+            const d = { ...this.upsertFormat(obj) };
+            delete d.created_at;
+            delete d.updated_at;
+            delete d.deleted_at;
+
+            return d;
+        }
+
+        if(Array.isArray(data)) {
+            return data.map((obj) => doClean(obj));
+        }
+
+        return doClean(data);
+    }
+
+
+    async addRelations(parentResults, childQuery, parentResultKey, childResultKey, relationName) {
+        const whereInArray = [];
+        const data = makeArray(parentResults)
+
+        data.forEach(result => {
+            if(result.hasOwnProperty(parentResultKey) && result[parentResultKey] !== null) {
+                whereInArray.push( result[parentResultKey] );
+            }
+        });
+
+        const relations = await childQuery.whereIn(childResultKey, whereInArray);
+
+        data.map((row) => {
+            row[relationName] = relations.filter((r) => r[childResultKey] === row[parentResultKey])
+            return row;
+        });
+
+        return data;
+    }
+
+}

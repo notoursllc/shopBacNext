@@ -1,0 +1,34 @@
+<mjml>
+    <mj-body>
+        <mj-section>
+            <mj-column>
+                <mj-table>
+                    <tr>
+                        <td style="padding:0 5px 10px 0; font-weight:bold">Sent from:</td>
+                        <td style="vertical-align:top">{{ application_name }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 5px 10px 0; font-weight:bold">Name:</td>
+                        <td style="vertical-align:top">{{ name }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 5px 10px 0; font-weight:bold">Company:</td>
+                        <td style="vertical-align:top">{{ company }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 5px 10px 0; font-weight:bold">Email:</td>
+                        <td style="vertical-align:top">{{ email }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 5px 10px 0; font-weight:bold">Message:</td>
+                        <td style="vertical-align:top">{{ message }}</td>
+                    </tr>
+                </mj-table>
+            </mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>

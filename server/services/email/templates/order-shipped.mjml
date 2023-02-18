@@ -1,0 +1,189 @@
+<mjml>
+    <mj-head>
+        <mj-title>{{ brandName }}</mj-title>
+        <mj-font name="Roboto" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500"></mj-font>
+        <mj-attributes>
+            <mj-all font-family="Montserrat, Helvetica, Arial, sans-serif"></mj-all>
+            <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px"></mj-text>
+            <mj-section padding="0px"></mj-section>
+        </mj-attributes>
+    </mj-head>
+
+    <mj-body background-color="#F2F2F2">
+
+        <!-- logo -->
+        <mj-section padding="20px 20px 0 20px" background-color="#FFFFFF">
+            <mj-column>
+                {{#if application_logo}}
+                    <mj-image align="center" width="200px" src="{{ application_logo }}" />
+                {{/if}}
+            </mj-column>
+        </mj-section>
+
+        <!-- headline -->
+      	<mj-section padding="10px 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text font-weight="300" font-size="26px" color="#5FA91D" align="center">
+                    {{#compareStrings status_code "IT"}}
+                        It's on the way!
+                    {{/compareStrings}}
+                    {{#compareStrings status_code "DE"}}
+                        It's been delivered!
+                    {{/compareStrings}}
+                    {{#compareStrings status_code "AT"}}
+                        A delivery attempt has been made for your order!
+                    {{/compareStrings}}
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        <!-- tracking number -->
+        <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text font-size="16px">
+                    Tracking number: &nbsp;
+                    {{#if trackingUrl}}
+                        <a href="{{ trackingUrl }}" target="_blank">{{ trackingNumber }}</a>
+                    {{else}}
+                        {{ trackingNumber }}
+                    {{/if}}
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        {{#compareStrings status_code "IT"}}
+            <mj-section padding="10px 0" background-color="#FFFFFF">
+                <mj-column>
+                    <mj-text>
+                    If you're like us, you'll be checking the tracking link a whole lot. Keep in mind that tracking information may not be available for 24–36 hours.
+                    </mj-text>
+                </mj-column>
+            </mj-section>
+        {{/compareStrings}}
+
+        <!-- divider -->
+        <mj-section padding="10px 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-divider border-width="1px" border-color="#c9c9c9"></mj-divider>
+            </mj-column>
+        </mj-section>
+
+        {{#if cartItems}}
+            <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+                <mj-column>
+                    <mj-table>
+                        {{#each cartItems}}
+                            <tr>
+                                {{#if this.imageUrl}}
+                                    <td style="padding:10px; vertical-align:top">
+                                        <mj-image width="200px" src="{{ this.imageUrl }}" />
+                                    </td>
+                                {{/if}}
+
+                                <td style="padding:10px; vertical-align:top; font-size:16px">
+                                    <div style="font-weight:600">{{ this.title }}</div>
+
+                                    {{#if this.variant}}
+                                        <div>{{this.variant}}</div>
+                                    {{/if}}
+
+                                    {{#if this.qty}}
+                                        <div>Qty: {{this.qty}}</div>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </mj-table>
+                </mj-column>
+            </mj-section>
+
+            <!-- divider -->
+            <mj-section padding="10px 0" background-color="#FFFFFF">
+                <mj-column>
+                    <mj-divider border-width="1px" border-color="#c9c9c9"></mj-divider>
+                </mj-column>
+            </mj-section>
+        {{/if}}
+
+        <!-- order number -->
+        <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text font-size="16px">
+                    Order number:&nbsp;
+                    {{#if orderDetailsUrl}}
+                        <a href="{{ orderDetailsUrl }}" target="_blank">{{ id }}</a>
+                    {{else}}
+                        {{ id }}
+                    {{/if}}
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        <!-- shipping notes -->
+        {{#compareStrings status_code "IT"}}
+            <mj-section padding="10px 0" background-color="#FFFFFF">
+                <mj-column>
+                    <mj-text font-weight="600" font-size="16px">Please note:</mj-text>
+                    <mj-text>
+                        <ul style="margin-top:0">
+                            <li>Your order may arrive in multiple shipments.</li>
+                            <li>Packages shipped during weekend hours (Friday afternoon through Sunday evening) will not arrive at the carrier's sort facilities until Monday.</li>
+                        </ul>
+                    </mj-text>
+                </mj-column>
+            </mj-section>
+        {{/compareStrings}}
+
+        <!-- tracking events -->
+        {{#if trackingEvents}}
+            <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+                <mj-column>
+                    <mj-text font-weight="600">Tracking events:</mj-text>
+                    <mj-table>
+                        {{#each trackingEvents}}
+                            <tr>
+                                <!-- occurred at -->
+                                <td style="padding:5px; font-size:16px; vertical-align:top;">{{this.occurred_at}}</td>
+
+                                <!-- tracking details -->
+                                <td style="padding:5px; font-size:16px;">
+                                    <div>{{this.description}}</div>
+                                    <div>
+                                        {{this.city_locality}}{{#if this.city_locality}}{{#if this.state_province}}, {{/if}}{{/if}}{{this.state_province}}
+                                    </div>
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </mj-table>
+                </mj-column>
+            </mj-section>
+        {{/if}}
+
+        <!-- footer -->
+        <mj-section background-color="#ECEDE8" padding="20px">
+            <mj-column>
+                <mj-text align="center" font-weight="300" font-size="26px" color="#5FA91D">Thank you!</mj-text>
+                <mj-text align="center" font-weight="600" font-size="16px" padding="0">{{brandName}}</mj-text>
+
+                {{#if baseUrl}}
+                    <mj-text padding="2px" align="center">
+                        <a href="{{ baseUrl }}">{{ baseUrl }}</a>
+                    </mj-text>
+                {{/if}}
+
+                {{#if shipping_phone}}
+                    <mj-text align="center" font-size="16px" padding="2px">{{shipping_phone}}</mj-text>
+                {{/if}}
+            </mj-column>
+        </mj-section>
+
+        <!-- copyright -->
+        <mj-section padding="10px 0 20px 0">
+        	<mj-column>
+          	{{#if copyright}}
+            	<mj-text align="center"font-size="12px">{{ copyright }}</mj-text>
+            {{/if}}
+        	</mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>
