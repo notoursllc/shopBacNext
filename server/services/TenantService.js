@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import isObject from 'lodash.isobject';
 import TenantDao from '../db/dao/TenantDao.js';
 import TenantKnexManager from '../db/utils/TenantKnexManager.js';
 import ExchangeRateService from './exchange_rate/ExchangeRateService.js';
 import BaseService from './BaseService.js';
+import BunnyAPI from '../services/BunnyAPI.js';
 import { sendEmail, compileMjmlTemplate } from './email/EmailService.js';
 
 export default class TenantService extends BaseService {
@@ -50,6 +53,85 @@ export default class TenantService extends BaseService {
         }
 
         return filteredRates;
+    }
+
+
+    async update(knex, id, data) {
+        const Tenant = await this.fetchById(knex, id);
+
+        if(!Tenant) {
+            throw new Error('Tenant can not be found');
+        }
+
+        if(isObject(data.application_logo)) {
+            data.application_logo = await BunnyAPI.storage.tenantLogoUpload(
+                `${Date.now()}-${data.application_logo.filename}`,
+                data.application_logo
+            );
+
+            // delete the previous image
+            // No need for 'await' here right?
+            if(Tenant.application_logo) {
+                BunnyAPI.storage.del(Tenant.application_logo);
+            }
+        }
+
+        if(Array.isArray(data.shipengine_carriers)) {
+            for(let i=data.shipengine_carriers.length-1; i>=0; i--) {
+                if(!data.shipengine_carriers[i].id
+                    || !data.shipengine_carriers[i].service_codes?.domestic
+                    || !data.shipengine_carriers[i].service_codes?.international) {
+                    data.shipengine_carriers.splice(i, 1);
+                }
+            }
+        }
+
+        return this.tenantUpdate(knex, id, data)
+    }
+
+
+    async updateApiKey(knex, id) {
+        const tokens = this.generateToken();
+
+        return this.tenantUpdate(knex, id, {
+            api_key: tokens.hashedToken,
+            api_key_public: tokens.token
+        });
+    }
+
+
+    async removeApiKey(knex, id) {
+        return this.tenantUpdate(knex, id, {
+            api_key: null,
+            api_key_public: null
+        });
+    }
+
+
+    /**
+     * Get "Account" data, which is my made up label meaning a limited view
+     * of Tenant data.
+     *
+     * @param {*} knex
+     * @param {*} id
+     */
+    async fetchAccount(knex, id) {
+        const Tenant = await this.fetchById(knex, id);
+
+        if(!Tenant) {
+            return;
+        }
+
+        const whitelist = Object.keys(this.getAccountSchema());
+        const account = {};
+
+        for(let key in Tenant) {
+            if(whitelist.includes(key)) {
+                account[key] = Tenant[key];
+            }
+        }
+
+        return account;
     }
 
 
@@ -120,6 +202,38 @@ export default class TenantService extends BaseService {
         catch(err) {
             console.log(err);
         }
+    }
+
+
+    generateToken() {
+        const token = uuidv4().replace(/-/g, '');
+        const salt = bcrypt.genSaltSync(10);
+        const hashedToken = bcrypt.hashSync(token, salt);
+
+        return {
+            token,
+            hashedToken
+        }
+    }
+
+
+    getAccountSchema() {
+        const schemaCopy = { ...this.dao.schema };
+
+        const blacklist = [
+            'id',
+            'api_key',
+            'api_key_public',
+            'active',
+            'created_at',
+            'updated_at'
+        ];
+
+        blacklist.forEach((key) => {
+            delete schemaCopy[key];
+        });
+
+        return schemaCopy;
     }
 
 }

@@ -90,9 +90,10 @@ export default class BaseDao {
         try {
             const payload = {...data};
             delete payload.id;
+            payload.updated_at = knex.fn.now();
 
-            const qb = knex
-                .returning('id')
+            const qb = knex(this.tableName)
+                .returning(this.getAllColumns())
                 .where({
                     id: id
                 });
@@ -105,7 +106,7 @@ export default class BaseDao {
             // in the catch block.  Otherwise the errors will be returned,
             // which may lead DB query info
             const response = await qb.update(payload);
-            return response;
+            return response[0];
         }
         catch(err) {
             global.logger.error(err);
@@ -117,7 +118,10 @@ export default class BaseDao {
     async tenantUpdate(knex, id, data) {
         try {
             const payload = {...data};
-            payload.tenant_id = knex.tenant_id;
+
+            if(this.tableName !== this.tables.tenants) {
+                payload.tenant_id = knex.tenant_id;
+            }
 
             const response = await this.update(knex, id, payload);
             return response;
@@ -135,7 +139,7 @@ export default class BaseDao {
             // in the catch block.  Otherwise the errors will be returned,
             // which may lead DB query info
             const response = await knex
-                .returning('id')
+                .returning(this.getAllColumns())
                 .insert(data)
                 .into(this.tableName);
 
@@ -160,24 +164,6 @@ export default class BaseDao {
             throw new Error(GERNERIC_ERROR_MSG);
         }
     }
-
-
-    /**
-     * Returns
-     * @param {*} data
-     * @returns
-     */
-    // buildUpsertPayload(data) {
-    //     const payload = {};
-
-    //     for(let key in data) {
-    //         if(this.schema.hasOwnProperty(key)) {
-    //             payload[key] = data[key];
-    //         }
-    //     }
-
-    //     return payload;
-    // }
 
 
     parseQuery(query) {

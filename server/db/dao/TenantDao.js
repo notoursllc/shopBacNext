@@ -14,9 +14,11 @@ export default class TenantDao extends BaseDao {
     constructor() {
         super();
         this.tableName = this.tables.tenants;
+        this.hidden = [];
         this.schema = {
             id: Joi.string().max(100).required(),
             api_key: getJoiStringOrNull(),
+            api_key_public: getJoiStringOrNull(),
             application_name: getJoiStringOrNull(),
             application_url: getJoiStringOrNull(250),
             application_logo: Joi.alternatives().try(

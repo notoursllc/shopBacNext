@@ -43,7 +43,7 @@ export default class TenantKnexManager {
 
 
     getKnexForRequest(request) {
-        return this.getKnexForTenant(request.auth?.credentials?.id);
+        return this.getKnexForTenant(request.auth?.credentials?.tenant_id);
     }
 
     /*

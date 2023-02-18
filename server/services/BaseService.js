@@ -6,7 +6,7 @@ export default class BaseService {
 
 
     getTenantIdFromAuth(request) {
-        return request.auth?.credentials?.id;
+        return request.auth?.credentials?.tenant_id;
     }
 
 
@@ -15,13 +15,18 @@ export default class BaseService {
     }
 
 
-    fetchById(knex, id) {
-        return this.fetchOne(knex, { id })
+    fetchById(knex, id, includeHiddenCols) {
+        return this.fetchOne(knex, { id }, includeHiddenCols)
     }
 
 
     tenantCreate(knex, data) {
-        return this.dao.tenantCreate(knex, data)
+        return this.dao.tenantCreate(knex, data);
+    }
+
+
+    tenantUpdate(knex, id, data) {
+        return this.dao.tenantUpdate(knex, id, data);
     }
 
 }

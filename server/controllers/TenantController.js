@@ -69,6 +69,108 @@ export default class TenantController extends BaseController {
     }
 
 
+    async updateHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: TenantController:updateHandler', {
+                meta: {
+                    payload: request.payload
+                }
+            });
+
+            const Tenant = await this.TenantService.update(
+                request.knex,
+                request.knex.tenant_id,
+                request.payload
+            )
+
+            global.logger.info('RESPONSE: TenantController:updateHandler', {
+                meta: Tenant
+            });
+
+            return h.apiSuccess(Tenant);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
+    async updateApiKeyHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: TenantController.updateApiKeyHandler', {});
+
+            const Tenant = await this.TenantService.updateApiKey(
+                request.knex,
+                request.knex.tenant_id
+            );
+
+            global.logger.info('RESPONSE: TenantController.updateApiKeyHandler', {
+                meta: Tenant
+            });
+
+            return h.apiSuccess(Tenant);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.notFound(err);
+        }
+    }
+
+
+    async deleteApiKeyHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: TenantController.deleteApiKeyHandler', {});
+
+            const Tenant = await this.TenantService.removeApiKey(
+                request.knex,
+                request.knex.tenant_id
+            );
+
+            global.logger.info(`RESPONSE: TenantController.deleteApiKeyHandler`, {
+                meta: Tenant
+            });
+
+            return h.apiSuccess(Tenant);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.notFound(err);
+        }
+    }
+
+
+    async fetchAccountHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: TenantController.fetchAccountHandler', {
+                meta: {
+                    query: request.query
+                }
+            });
+
+            const Account = await this.TenantService.fetchAccount(request.knex, request.knex.tenant_id);
+
+            if(!Account) {
+                return h.apiSuccess();
+            }
+
+            global.logger.info(`RESPONSE: TenantController.fetchAccountHandler`, {
+                meta: Account
+            });
+
+            return h.apiSuccess(Account);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.notFound(err);
+        }
+    }
+
+
     contactUsHandlerRequestValidation() {
         return Joi.object({
             name: Joi.string().trim().max(100).required(),

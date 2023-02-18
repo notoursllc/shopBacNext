@@ -1,8 +1,12 @@
+import Joi from 'joi';
 import TenantController from '../../../controllers/TenantController.js';
 import TenantMemberController from '../../../controllers/TenantMemberController.js';
+import TenantService from '../../../services/TenantService.js';
 
 const TenantCtrl = new TenantController();
 const TenantMemberCtrl = new TenantMemberController();
+const TenantSvc = new TenantService();
+const payloadMaxBytes = process.env.ROUTE_PAYLOAD_MAXBYTES || 10485760; // 10MB (1048576 (1 MB) is the default)
 
 
 export default (server) => {
@@ -83,6 +87,75 @@ export default (server) => {
                 },
                 handler: (request, h) => {
                     return TenantMemberCtrl.logoutHandler(request, h);
+                }
+            }
+        },
+
+        /*
+        *  ACCOUNT
+        */
+        {
+            method: 'GET',
+            path: '/account',
+            options: {
+                description: 'GET abbreviated Tenant data',
+                auth: {
+                    strategies: ['session']
+                },
+                handler: (request, h) => {
+                    return TenantCtrl.fetchAccountHandler(request, h);
+                }
+            }
+        },
+        {
+            method: 'PUT',
+            path: '/account',
+            options: {
+                description: 'Updates limited Tenant data',
+                auth: {
+                    strategies: ['session']
+                },
+                payload: {
+                    // output: 'stream',
+                    output: 'file',
+                    parse: true,
+                    allow: 'multipart/form-data',
+                    maxBytes: payloadMaxBytes,
+                    multipart: true
+                },
+                validate: {
+                    payload: Joi.object({
+                        ...TenantSvc.getAccountSchema()
+                    })
+                },
+                handler: (request, h) => {
+                    return TenantCtrl.updateHandler(request, h);
+                }
+            }
+        },
+        {
+            method: 'PUT',
+            path: '/account/api_key',
+            options: {
+                description: 'Updates the API key for the Tenant',
+                auth: {
+                    strategies: ['session']
+                },
+                handler: (request, h) => {
+                    return TenantCtrl.updateApiKeyHandler(request, h);
+                }
+            }
+        },
+        {
+            method: 'DELETE',
+            path: '/account/api_key',
+            options: {
+                description: 'Deletes the API key for the Tenant',
+                auth: {
+                    strategies: ['session']
+                },
+                handler: (request, h) => {
+                    return TenantCtrl.deleteApiKeyHandler(request, h);
                 }
             }
         },
