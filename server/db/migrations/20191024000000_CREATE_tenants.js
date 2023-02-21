@@ -1,23 +1,20 @@
-const {
-    DB_TABLES,
+import tables from '../utils/tables.js';
+import {
     getSql_enableRlsPolicyOnTable,
-    getSql_createPolicyEnableSelectBasedOnId,
+    getSql_createPolicyEnableSelectBasedOnTenantId,
     getSql_grantSelectUpdate
- } = require('../../plugins/core/services/CoreService');
+} from '../utils/policies.js';
 
-const tableName = DB_TABLES.tenants;
+const tableName = tables.tenants;
 
 
-module.exports.up = async (knex) => {
-    await knex.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-
+export async function up(knex) {
     return Promise.all([
         knex.schema.createTable(
             tableName,
             (t) => {
                 t.uuid('id').primary().unique().defaultTo(knex.raw('uuid_generate_v4()'));
-                t.string('api_key').nullable();
-                t.string('api_key_public').nullable();
+                t.string('auth_password').nullable();
                 t.string('application_name').nullable();
                 t.string('application_url').nullable();
                 t.text('application_logo').nullable();
@@ -47,12 +44,19 @@ module.exports.up = async (knex) => {
         ),
 
         knex.raw( getSql_enableRlsPolicyOnTable(tableName) ),
-        knex.raw( getSql_createPolicyEnableSelectBasedOnId(tableName) ),
+
+        knex.raw(`
+            CREATE POLICY "Enable select based on id"
+            ON ${tableName}
+            AS PERMISSIVE FOR SELECT
+            USING (id = current_setting('app.current_tenant')::uuid)
+        `),
+
         knex.raw( getSql_grantSelectUpdate(tableName) )
     ]);
 };
 
 
-module.exports.down = (knex) => {
+export function down(knex) {
     return knex.schema.dropTableIfExists(tableName);
 };

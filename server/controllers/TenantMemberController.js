@@ -17,7 +17,7 @@ export default class TenantMemberController extends BaseController {
                 meta: request.payload
             });
 
-            const response = await this.TenantMemberService.tenantCreate(request.knex, request.payload);
+            const response = await this.TenantMemberService.dao.tenantCreate(request.knex, request.payload);
 
             global.logger.info('RESPONSE: TenantMemberController.createHandler', {
                 meta: {

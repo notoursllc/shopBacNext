@@ -67,7 +67,10 @@ export default (server) => {
                 description: 'Authenticates a tenant member and sets a cookie',
                 // auth: false,
                 auth: {
-                    strategies: ['storeauth', 'session']
+                    strategies: ['storeauth', 'session'],
+                    // strategies: ['storeauth']
+                    // strategies: ['storeauth'],
+                    mode: 'optional'
                 },
                 validate: {
                     payload: TenantMemberCtrl.loginRequestValidation()
@@ -83,7 +86,8 @@ export default (server) => {
             options: {
                 description: 'Logs out a tenant member',
                 auth: {
-                    strategies: ['session']
+                    // strategies: ['session']
+                    strategies: ['storeauth', 'session']
                 },
                 handler: (request, h) => {
                     return TenantMemberCtrl.logoutHandler(request, h);

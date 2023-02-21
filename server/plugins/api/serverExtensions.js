@@ -13,9 +13,9 @@ export default (server) => {
 
     // Basic auth for store API usage
     server.auth.strategy('storeauth', 'basic', {
-        validate: async (request, tenant_id, api_key) => {
+        validate: async (request, tenant_id, basic_auth_pwd) => {
             try {
-                const tenantData = await TenantSvc.apiKeyIsValid(tenant_id, api_key);
+                const tenantData = await TenantSvc.basicAuthPasswordIsValid(tenant_id, basic_auth_pwd);
 
                 return {
                     isValid: tenantData ? true : false,
@@ -53,7 +53,11 @@ export default (server) => {
         // keepAlive: true,
         validate: async (request, session) => {
             const knex = TenantKnexManager.getKnexForTenant(process.env.TENANT_ID_BYPASSRLS);
-            const tenantMember = await TenantMemberSvc.fetchById(knex, session.id, true);
+            const tenantMember = await TenantMemberSvc.dao.fetchOne(
+                knex,
+                { id: session.id },
+                TenantMemberSvc.dao.getAllColumns(true)
+            );
 
             global.logger.info('Cookie validate', {
                 meta: {
@@ -100,12 +104,14 @@ export default (server) => {
     server.auth.default('session');
 
 
-    server.decorate('toolkit', 'apiSuccess', function (responseData, paginationObj) {
+    server.decorate('toolkit', 'apiSuccess', function (responseData) {
         const response = {};
-        response.data = responseData;
+        response.data = isObject(responseData) && responseData.hasOwnProperty('data')
+            ? responseData.data
+            : responseData;
 
-        if(isObject(paginationObj)) {
-            response.pagination = paginationObj;
+        if(isObject(responseData) && responseData.hasOwnProperty('pagination')) {
+            response.pagination = responseData.pagination;
         }
 
         return this.response(response);

@@ -1,17 +1,18 @@
-const {
-    DB_TABLES,
+import tables from '../utils/tables.js';
+import {
     getSql_enableRlsPolicyOnTable,
-    getSql_createPolicyEnableSelectBasedOnId,
+    getSql_createPolicyEnableSelectBasedOnTenantId,
     getSql_grantSelectInsertUpdateDelete
- } = require('../../plugins/core/services/CoreService');
-const tableName = DB_TABLES.product_data_tables;
+} from '../utils/policies.js'
 
-module.exports.up = (knex) => {
+const tableName = tables.product_data_tables;
+
+export function up(knex) {
     return Promise.all([
         knex.schema.createTable(
             tableName,
             (t) => {
-                t.uuid('id').primary();
+                t.uuid('id').primary().unique().defaultTo(knex.raw('uuid_generate_v4()'));
                 t.uuid('tenant_id').nullable();
                 t.string('name').notNullable();
                 t.jsonb('table_data').nullable();
@@ -27,13 +28,13 @@ module.exports.up = (knex) => {
 
         knex.raw( getSql_enableRlsPolicyOnTable(tableName) ),
 
-        knex.raw( getSql_createPolicyEnableSelectBasedOnId(tableName) ),
+        knex.raw( getSql_createPolicyEnableSelectBasedOnTenantId(tableName) ),
 
         knex.raw( getSql_grantSelectInsertUpdateDelete(tableName) )
     ]);
 };
 
 
-module.exports.down = (knex) => {
+export function down(knex) {
     return knex.schema.dropTableIfExists(tableName);
 };

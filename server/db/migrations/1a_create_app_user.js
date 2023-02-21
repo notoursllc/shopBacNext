@@ -2,8 +2,10 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function(knex) {
+export function up(knex) {
     return Promise.all([
+        knex.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'),
+
         // put our two 'app' users into a group so it's easier to grand privileges to them in subsequent migrations
         knex.raw(`
             GRANT ${process.env.DB_APP_ALL_USERS_GROUP_NAME} TO ${process.env.DB_APPUSER}, ${process.env.DB_APPUSER_BYPASSRLS}
@@ -22,6 +24,6 @@ exports.up = function(knex) {
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.down = function(knex) {
+export function down(knex) {
 
 };

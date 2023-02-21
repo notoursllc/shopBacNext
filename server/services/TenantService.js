@@ -26,7 +26,7 @@ export default class TenantService extends BaseService {
     async getSupportedCurrenyRates(knex) {
         const result = await Promise.all([
             this.ExchangeRateService.fetchRate(knex),
-            this.fetchById(knex, knex.tenant_id)
+            this.dao.fetchOne(knex, { id: knex.tenant_id })
         ]);
 
         const ExchangeRate = result[0];
@@ -57,7 +57,7 @@ export default class TenantService extends BaseService {
 
 
     async update(knex, id, data) {
-        const Tenant = await this.fetchById(knex, id);
+        const Tenant = await this.dao.fetchOne(knex, { id });
 
         if(!Tenant) {
             throw new Error('Tenant can not be found');
@@ -86,24 +86,25 @@ export default class TenantService extends BaseService {
             }
         }
 
-        return this.tenantUpdate(knex, id, data)
+        return this.dao.tenantUpdate(knex, id, data)
     }
 
 
     async updateApiKey(knex, id) {
         const tokens = this.generateToken();
 
-        return this.tenantUpdate(knex, id, {
-            api_key: tokens.hashedToken,
-            api_key_public: tokens.token
+        const response = await this.dao.tenantUpdate(knex, id, {
+            auth_password: tokens.hashedToken
         });
+
+        response.api_key_public = tokens.token;
+        return response;
     }
 
 
     async removeApiKey(knex, id) {
-        return this.tenantUpdate(knex, id, {
-            api_key: null,
-            api_key_public: null
+        return this.dao.tenantUpdate(knex, id, {
+            auth_password: null
         });
     }
 
@@ -116,7 +117,7 @@ export default class TenantService extends BaseService {
      * @param {*} id
      */
     async fetchAccount(knex, id) {
-        const Tenant = await this.fetchById(knex, id);
+        const Tenant = await this.dao.fetchOne(knex, { id });
 
         if(!Tenant) {
             return;
@@ -161,39 +162,44 @@ export default class TenantService extends BaseService {
     }
 
 
-    async apiKeyIsValid(tenant_id, api_key) {
+    async basicAuthPasswordIsValid(tenant_id, basic_auth_pwd) {
         try {
-            if (!tenant_id || !api_key) {
-                global.logger.error('TenantService:apiKeyIsValid - FAILED');
+            if (!tenant_id || !basic_auth_pwd) {
+                global.logger.error('TenantService:basicAuthPasswordIsValid - FAILED');
                 return false;
             }
 
             const _knex = this.TenantKnexManager.getKnexForTenant(process.env.TENANT_ID_BYPASSRLS);
-            const tenantData = await this.fetchOne(_knex, {
+            const tenantData = await this.dao.fetchOne(_knex, {
                 id: tenant_id,
                 active: true
             });
 
             if(!tenantData) {
-                global.logger.error('TenantService:apiKeyIsValid - FAILED - no Tenant found');
+                global.logger.error('TenantService:basicAuthPasswordIsValid - FAILED - no Tenant found');
                 return false;
             }
 
-            if(!tenantData.api_key) {
-                global.logger.error('TenantService:apiKeyIsValid - FAILED - Tenant does not have an API key');
+            if(!tenantData.auth_password) {
+                global.logger.error('TenantService:basicAuthPasswordIsValid - FAILED - Tenant does not have a basic auth password');
                 return false;
             }
 
-            const isValid = bcrypt.compareSync(api_key, tenantData.api_key);
+            const isValid = bcrypt.compareSync(basic_auth_pwd, tenantData.auth_password);
 
             if(!isValid) {
-                global.logger.error('TenantService:apiKeyIsValid - FAILED - api key does not match hash');
+                global.logger.error('TenantService:basicAuthPasswordIsValid - FAILED - basic auth password does not match hash', {
+                    meta: {
+                        basic_auth_pwd: basic_auth_pwd,
+                        auth_password: tenantData.auth_password
+                    }
+                });
                 return false;
             }
 
-            global.logger.info('RESPONSE: TenantService:apiKeyIsValid', {
+            global.logger.info('RESPONSE: TenantService:basicAuthPasswordIsValid', {
                 meta: {
-                    tenant: tenantData.id
+                    'password is valid for tenant': tenantData.id
                 }
             });
 
@@ -222,8 +228,7 @@ export default class TenantService extends BaseService {
 
         const blacklist = [
             'id',
-            'api_key',
-            'api_key_public',
+            'auth_password',
             'active',
             'created_at',
             'updated_at'

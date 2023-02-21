@@ -1,5 +1,8 @@
 import Knex from 'knex';
 import config from '../../../knexfile.js';
+import { attachPaginate } from 'knex-paginate';
+
+attachPaginate();
 const MAX_CONNECTION_CACHE = 10;
 
 
@@ -13,6 +16,10 @@ export default class TenantKnexManager {
     * exist in the cache for the tenant
     */
     getKnexForTenant(tenantId) {
+        global.logger.info("getKnexForTenant", {
+            meta: { 'tenant id': tenantId }
+        });
+
         if (!tenantId) {
             return null;
         }
@@ -43,7 +50,11 @@ export default class TenantKnexManager {
 
 
     getKnexForRequest(request) {
-        return this.getKnexForTenant(request.auth?.credentials?.tenant_id);
+        // If there is no auth strategy defined for the route then I guess we need to use
+        // the ID of the user that can bypass RLS right?
+        return this.getKnexForTenant(
+            request.auth.strategy ? request.auth?.credentials?.tenant_id : process.env.TENANT_ID_BYPASSRLS
+        );
     }
 
     /*
@@ -75,6 +86,12 @@ export default class TenantKnexManager {
         // otherwise we use the regular `DB_APPUSER` user, which does not have `BYPASSRLS` (see server/db/migrations/1_create_app_user.js)
         knexConfig.connection.user = tenantId === process.env.TENANT_ID_BYPASSRLS ? process.env.DB_APPUSER_BYPASSRLS : process.env.DB_APPUSER;
         knexConfig.connection.password = tenantId === process.env.TENANT_ID_BYPASSRLS ? process.env.DB_APPUSER_BYPASSRLS_PASSWORD : process.env.DB_APPUSER_PASSWORD;
+
+        global.logger.info('knexConfigForTenant', {
+            meta: {
+                'db user': knexConfig.connection.user
+            }
+        });
 
         return knexConfig;
     }

@@ -5,8 +5,7 @@ import { getLatestOpenExchangeRates } from './OpenExchangeRatesService.js';
 export default class ExchangeRateService extends BaseService {
 
     constructor() {
-        super();
-        this.ExchangeRateDao = new ExchangeRateDao();
+        super(new ExchangeRateDao());
     }
 
 
@@ -23,13 +22,13 @@ export default class ExchangeRateService extends BaseService {
         // Right now I dont see the value in keeping historical data
         // about every exchange rate as long as the exchange rate used is persisted in the cart
         try {
-            this.ExchangeRateDao.deleteOne(knex, 1);
+            this.dao.deleteOne(knex, 1);
         }
         catch(err) {
             // drop the error
         }
 
-        return this.ExchangeRateDao.tenantUpdate(knex, 1, {
+        return this.dao.tenantUpdate(knex, 1, {
             id: 1,
             base: data.base,
             rates: data.rates
@@ -38,7 +37,7 @@ export default class ExchangeRateService extends BaseService {
 
 
     fetchRate(knex) {
-        return this.ExchangeRateDao.fetchOne(knex, { id: 1 });
+        return this.dao.fetchOne(knex, { id: 1 });
     }
 
 }

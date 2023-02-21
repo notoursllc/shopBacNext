@@ -6,7 +6,7 @@ export default class TenantMemberDao extends BaseDao {
     constructor() {
         super();
         this.tableName = this.tables.tenant_members;
-        this.hidden = ['tenant_id', 'api_key', 'api_key_public', 'password'];
+        this.hidden = ['tenant_id', 'password'];
         this.schema = {
             id: Joi.string().uuid(),
             tenant_id: Joi.string().max(100),

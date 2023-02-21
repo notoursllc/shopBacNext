@@ -1,3 +1,4 @@
+import Joi from 'joi';
 import tables from '../utils/tables.js';
 import isObject from 'lodash.isobject';
 import isString from 'lodash.isstring';
@@ -38,10 +39,25 @@ export default class BaseDao {
     }
 
 
-    fetchOne(knex, whereConfig, includeHiddenCols) {
+    search(knex, query, columns) {
+        const qb = knex
+            .select(columns || this.getAllColumns())
+            .from(this.tableName);
+
+        this.buildFilters(query, qb);
+
+        if(this.isSoftDelete()) {
+            qb.whereNull('deleted_at')
+        }
+
+        return this.paginate(query, qb);
+    }
+
+
+    fetchOne(knex, whereConfig, columns) {
         try {
             const qb = knex
-                .select(this.getAllColumns(includeHiddenCols))
+                .select(Array.isArray(columns) ? columns : this.getAllColumns())
                 .from(this.tableName)
                 .where(whereConfig);
 
@@ -201,6 +217,10 @@ export default class BaseDao {
      * https://knexjs.org/#Builder-wheres
      */
     buildFilters(query, qb) {
+        if(!query) {
+            return;
+        }
+
         // const parsed = qs.parse(query);
         this.parseQuery(query);
 
@@ -402,6 +422,23 @@ export default class BaseDao {
         });
 
         return data;
+    }
+
+
+    getPaginationSchema() {
+        return {
+            _sort: Joi.string().max(50),
+
+            _pageSize: Joi.alternatives().try(
+                Joi.number().integer().min(0),
+                Joi.string().max(5)
+            ),
+
+            _page: Joi.alternatives().try(
+                Joi.number().integer().min(0),
+                Joi.string().max(5)
+            )
+        };
     }
 
 }

@@ -1,16 +1,16 @@
-const {
-    DB_TABLES,
-    getSql_grantSelect,
- } = require('../../plugins/core/services/CoreService');
+import tables from '../utils/tables.js';
+import {
+    getSql_grantSelect
+} from '../utils/policies.js';
 
-const tableName = DB_TABLES.exchange_rates;
+const tableName = tables.exchange_rates;
 
 /*
 * NOTE: this table data is not tied to a tenant_id
 * so a RLS policy is not needed
 */
 
-exports.up = function(knex) {
+export function up(knex) {
     return Promise.all([
         knex.schema.createTable(
             tableName,
@@ -32,6 +32,6 @@ exports.up = function(knex) {
 };
 
 
-exports.down = function(knex) {
+export function down(knex) {
     return knex.schema.dropTableIfExists(tableName);
 };
