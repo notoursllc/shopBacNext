@@ -1,59 +1,42 @@
 import Boom from '@hapi/boom';
+import isString from 'lodash.isstring';
 import BaseController from './BaseController.js';
 import PackageTypeService from '../services/PackageTypeService.js';
 
 export default class PackageTypeController extends BaseController {
 
     constructor() {
-        super();
-        this.PackageTypeService = new PackageTypeService();
+        super(new PackageTypeService());
     }
 
 
-    async searchHandler(request, h) {
+    async bulkUpdateOrdinalsHandler(request, h) {
         try {
-            global.logger.info('REQUEST: PackageTypeController.searchHandler', {
-                meta: {
-                    query: request.query
-                }
+            global.logger.info('REQUEST: PackageTypeController.bulkUpdateOrdinalsHandler', {
+                meta: request.payload.ordinals
             });
 
-            const PackageTypes = await this.PackageTypeService.dao.search(request.knex, request.query);
+            const promises = [];
+            const ordinals = isString(request.payload.ordinals)
+                ? JSON.parse(request.payload.ordinals)
+                : [...request.payload.ordinals];
 
-            global.logger.info('RESPONSE: PackageTypeController.searchHandler', {
-                meta: {
-                    num_results: PackageTypes?.data?.length
-                }
+            ordinals.forEach((obj) => {
+                promises.push(
+                    this.service.dao.tenantUpdate({
+                        knex: request.knex,
+                        where: { id: obj.id },
+                        data: { ordinal: obj.ordinal },
+                        returning: [ 'id', 'ordinal' ]
+                    })
+                );
             });
 
-            return h.apiSuccess(PackageTypes);
-        }
-        catch(err) {
-            global.logger.error(err);
-            global.bugsnag(err);
-            throw Boom.badRequest(err);
-        }
-    }
+            const response = await Promise.all(promises);
 
+            global.logger.info('RESPONSE: PackageTypeController.bulkUpdateOrdinalsHandler');
 
-    async getOneHandler(request, h) {
-        try {
-            global.logger.info('REQUEST: PackageTypeController.getOneHandler', {
-                meta: {
-                    query: request.query
-                }
-            });
-
-            const PackageType = await this.PackageTypeService.dao.fetchOne(
-                request.knex,
-                { id: request.query.id }
-            );
-
-            global.logger.info('RESPONSE: PackageTypeController.getOneHandler', {
-                meta: PackageType
-            });
-
-            return h.apiSuccess(PackageType);
+            return h.apiSuccess(response);
         }
         catch(err) {
             global.logger.error(err);

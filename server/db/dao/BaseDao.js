@@ -1,10 +1,25 @@
 import Joi from 'joi';
+import { assert }from '@hapi/hoek';
 import tables from '../utils/tables.js';
 import isObject from 'lodash.isobject';
 import isString from 'lodash.isstring';
+import isFunction from 'lodash.isfunction';
 import { makeArray } from '../../utils/index.js';
 
 const GERNERIC_ERROR_MSG = 'An error occurred while executing the DB operation.';
+
+
+function assertKnex(config) {
+    assert(isFunction(config.knex), new Error('config.knex must be a function'));
+}
+
+function assertWhere(config) {
+    assert(isObject(config.where), new Error('config.where must be an object'));
+}
+
+function assertData(config) {
+    assert(isObject(config.data), new Error('config.data must be an object'));
+}
 
 export default class BaseDao {
 
@@ -39,22 +54,30 @@ export default class BaseDao {
     }
 
 
-    search(knex, query, columns) {
-        const qb = knex
-            .select(columns || this.getAllColumns())
-            .from(this.tableName);
 
-        this.buildFilters(query, qb);
+    async search(knex, query, columns) {
+        try {
+            const qb = knex
+                .select(columns || this.getAllColumns())
+                .from(this.tableName);
 
-        if(this.isSoftDelete()) {
-            qb.whereNull('deleted_at')
+            this.buildFilters(query, qb);
+
+            if(this.isSoftDelete()) {
+                qb.whereNull('deleted_at')
+            }
+
+            const response = await this.paginate(query, qb);
+            return response;
         }
-
-        return this.paginate(query, qb);
+        catch(err) {
+            global.logger.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
     }
 
 
-    fetchOne(knex, whereConfig, columns) {
+    async fetchOne(knex, whereConfig, columns) {
         try {
             const qb = knex
                 .select(Array.isArray(columns) ? columns : this.getAllColumns())
@@ -65,7 +88,8 @@ export default class BaseDao {
                 qb.whereNull('deleted_at')
             }
 
-            return qb.first();
+            const response = await qb.first();
+            return response;
         }
         catch(err) {
             console.error(err);
@@ -75,25 +99,32 @@ export default class BaseDao {
 
 
     /*
-    * Deletes one row
+    * Deletes a record
     * http://knexjs.org/#Builder-del%20/%20delete
     */
-    deleteOne(knex, id) {
+    async del(knex, whereObj) {
         try {
             const qb = knex
+                .from(this.tableName)
                 .returning('id')
-                .where({
-                    id: id
-                });
+                .where(whereObj);
+
+            const returnObj = { id: null };
 
             if(this.isSoftDelete()) {
-                return qb.whereNull('deleted_at').update({
-                    deleted_at: this.knex.fn.now()
+                const updateResponse = await qb.whereNull('deleted_at').update({
+                    deleted_at: knex.fn.now()
                 });
+
+                returnObj.id = updateResponse?.[0]?.id || null;
+            }
+            else {
+                // or hard delete
+                const delResponse = await qb.del();
+                returnObj.id = delResponse?.[0]?.id || null;
             }
 
-            // or hard delete
-            return qb.del();
+            return returnObj;
         }
         catch(err) {
             global.logger.error(err);
@@ -102,17 +133,20 @@ export default class BaseDao {
     }
 
 
-    async update(knex, id, data) {
+    async update(config) {
+        assertKnex(config);
+        assertWhere(config);
+        assertData(config);
+
         try {
-            const payload = {...data};
+            const knex = config.knex;
+            const payload = {...config.data};
             delete payload.id;
             payload.updated_at = knex.fn.now();
 
             const qb = knex(this.tableName)
-                .returning(this.getAllColumns())
-                .where({
-                    id: id
-                });
+                .returning(config.returning || this.getAllColumns())
+                .where(config.where);
 
             if(this.isSoftDelete()) {
                 qb.whereNull('deleted_at')
@@ -131,16 +165,16 @@ export default class BaseDao {
     }
 
 
-    async tenantUpdate(knex, id, data) {
-        try {
-            const payload = {...data};
+    tenantUpdate(config) {
+        assertKnex(config);
+        assertData(config);
 
+        try {
             if(this.tableName !== this.tables.tenants) {
-                payload.tenant_id = knex.tenant_id;
+                config.data.tenant_id = config.knex.tenant_id;
             }
 
-            const response = await this.update(knex, id, payload);
-            return response;
+            return this.update(config);
         }
         catch(err) {
             global.logger.error(err);
@@ -168,7 +202,7 @@ export default class BaseDao {
     }
 
 
-    async tenantCreate(knex, data) {
+    tenantCreate(knex, data) {
         try {
             const payload = {...data};
             payload.tenant_id = knex.tenant_id;

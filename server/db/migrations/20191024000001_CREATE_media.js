@@ -1,7 +1,7 @@
 import tables from '../utils/tables.js';
 import {
     getSql_enableRlsPolicyOnTable,
-    getSql_createPolicyEnableSelectBasedOnTenantId,
+    getSql_createPolicyEnableAllBasedOnTenantId,
     getSql_grantSelectInsertUpdate
 } from '../utils/policies.js';
 
@@ -34,7 +34,7 @@ export function up(knex) {
         ),
 
         knex.raw( getSql_enableRlsPolicyOnTable(tableName) ),
-        knex.raw( getSql_createPolicyEnableSelectBasedOnTenantId(tableName) ),
+        knex.raw( getSql_createPolicyEnableAllBasedOnTenantId(tableName) ),
         knex.raw( getSql_grantSelectInsertUpdate(tableName) ),
     ]);
 };

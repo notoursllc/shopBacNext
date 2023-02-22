@@ -1,7 +1,7 @@
 import tables from '../utils/tables.js';
 import {
     getSql_enableRlsPolicyOnTable,
-    getSql_createPolicyEnableSelectBasedOnTenantId,
+    getSql_createPolicyEnableAllBasedOnTenantId,
     getSql_grantSelectUpdate
 } from '../utils/policies.js';
 

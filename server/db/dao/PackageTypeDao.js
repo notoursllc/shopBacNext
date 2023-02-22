@@ -28,6 +28,7 @@ export default class PackageTypeDao extends BaseDao {
             weight_oz: Joi.number().min(0).allow(null),
             max_weight_oz: Joi.number().min(0).allow(null),
             ordinal: Joi.number().integer().min(0).allow(null),
+            published: Joi.boolean(),
             created_at: Joi.date(),
             updated_at: Joi.date(),
             deleted_at: Joi.date()

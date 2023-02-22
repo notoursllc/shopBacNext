@@ -31,7 +31,6 @@ export default class TenantMemberService extends BaseService {
         );
 
         // const TenantMember = await this.dao.search(knex, null, null, true);
-        console.log("LOGIN TENANT MEMBER", email, TenantMember)
 
         if(!TenantMember || !bcrypt.compareSync(password, TenantMember.password)) {
             throw new Error('Unauthorized')

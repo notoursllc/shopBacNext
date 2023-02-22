@@ -5,11 +5,14 @@ export function getSql_enableRlsPolicyOnTable(tableName) {
     `;
 };
 
-export function getSql_createPolicyEnableSelectBasedOnTenantId(tableName) {
+/*
+* https://www.postgresql.org/docs/current/sql-createpolicy.html
+*/
+export function getSql_createPolicyEnableAllBasedOnTenantId(tableName) {
     return `
         CREATE POLICY "Enable select based on tenant_id"
         ON ${tableName}
-        AS PERMISSIVE FOR SELECT
+        AS PERMISSIVE FOR ALL
         USING (tenant_id = current_setting('app.current_tenant')::uuid)
     `;
 };

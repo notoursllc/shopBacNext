@@ -22,16 +22,20 @@ export default class ExchangeRateService extends BaseService {
         // Right now I dont see the value in keeping historical data
         // about every exchange rate as long as the exchange rate used is persisted in the cart
         try {
-            this.dao.deleteOne(knex, 1);
+            this.dao.del(knex, { id: 1 });
         }
         catch(err) {
             // drop the error
         }
 
-        return this.dao.tenantUpdate(knex, 1, {
-            id: 1,
-            base: data.base,
-            rates: data.rates
+        return this.dao.tenantUpdate({
+            knex: knex,
+            where: { id: 1 },
+            data:  {
+                id: 1,
+                base: data.base,
+                rates: data.rates
+            }
         });
     }
 

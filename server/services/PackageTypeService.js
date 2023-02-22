@@ -9,9 +9,23 @@ export default class PackageTypeService extends BaseService {
     }
 
 
-    getSinglePackageTypeValidationSchema() {
+    getUpdateOrdinalsValidationSchema() {
         return {
-            id: Joi.string().uuid().required()
+            // ordinals: Joi.array().items(
+            //     Joi.object().keys({
+            //         ...this.getIdValidationSchema(),
+            //         ordinal: Joi.number().integer().required()
+            //     })
+            // )
+            ordinals: Joi.alternatives().try(
+                Joi.array().items(
+                    Joi.object().keys({
+                        ...this.getIdValidationSchema(),
+                        ordinal: Joi.number().integer().required()
+                    })
+                ),
+                Joi.string().trim()
+            )
         }
     }
 

@@ -86,15 +86,21 @@ export default class TenantService extends BaseService {
             }
         }
 
-        return this.dao.tenantUpdate(knex, id, data)
+        return this.dao.tenantUpdate({
+            knex: knex,
+            where: { id },
+            data: data,
+        });
     }
 
 
     async updateApiKey(knex, id) {
         const tokens = this.generateToken();
 
-        const response = await this.dao.tenantUpdate(knex, id, {
-            auth_password: tokens.hashedToken
+        const response = this.dao.tenantUpdate({
+            knex: knex,
+            where: { id },
+            data: { auth_password: tokens.hashedToken }
         });
 
         response.api_key_public = tokens.token;
@@ -103,8 +109,10 @@ export default class TenantService extends BaseService {
 
 
     async removeApiKey(knex, id) {
-        return this.dao.tenantUpdate(knex, id, {
-            auth_password: null
+        return this.dao.tenantUpdate({
+            knex: knex,
+            where: { id },
+            data: { auth_password: null }
         });
     }
 
