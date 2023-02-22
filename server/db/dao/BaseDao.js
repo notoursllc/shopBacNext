@@ -140,7 +140,7 @@ export default class BaseDao {
 
         try {
             const knex = config.knex;
-            const payload = {...config.data};
+            const payload = this.prepareForUpsert(config.data);
             delete payload.id;
             payload.updated_at = knex.fn.now();
 
@@ -190,7 +190,7 @@ export default class BaseDao {
             // which may lead DB query info
             const response = await knex
                 .returning(this.getAllColumns())
-                .insert(data)
+                .insert( this.prepareForUpsert(data) )
                 .into(this.tableName);
 
             return response;
@@ -392,37 +392,22 @@ export default class BaseDao {
     }
 
 
-    sanitize(results) {
-        const arr = Array.isArray(results) ? results : [results];
-
-        const clean = arr.map((obj) => {
-            this.hidden.forEach((key) => {
-                delete obj[key];
-            });
-            return obj;
-        });
-
-        return clean;
+    /**
+     * This method is meant to be extended by any class
+     * that has specific data formatting needs before DB insertion
+     *
+     * @param {*} data
+     * @returns
+     */
+    formatForUpsert(data) {
+        return data;
     }
 
-
-    stripInvalidCols(data) {
-        const cols = this.getAllColumns();
-        const validData = {};
-
-        for(const key in data) {
-            if(cols.includes(key)) {
-                validData[key] = data[key];
-            }
-        }
-
-        return validData;
-    }
 
 
     prepareForUpsert(data) {
         const doClean = (obj) => {
-            const d = { ...this.upsertFormat(obj) };
+            const d = { ...this.formatForUpsert(obj) };
             delete d.created_at;
             delete d.updated_at;
             delete d.deleted_at;

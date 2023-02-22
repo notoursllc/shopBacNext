@@ -5,6 +5,7 @@ import serverExtensions from './serverExtensions.js';
 
 // routes
 import coreRoutes from './routes/core.mjs';
+import masterTypeRoutes from './routes/master_types.mjs';
 import packageTypeRoutes from './routes/package_types.mjs';
 import productRoutes from './routes/product.mjs';
 import tenantRoutes from './routes/tenant.mjs';
@@ -29,6 +30,7 @@ export default {
                 function (server) {
                     serverExtensions(server);
                     coreRoutes(server);
+                    masterTypeRoutes(server);
                     packageTypeRoutes(server);
                     productRoutes(server);
                     tenantRoutes(server);

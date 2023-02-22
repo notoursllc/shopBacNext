@@ -9,7 +9,7 @@ export default class PackageTypeDao extends BaseDao {
         this.tableName = this.tables.package_types;
         this.hidden = ['tenant_id', 'deleted_at'];
         this.schema = {
-            id: Joi.string().uuid().allow(null),
+            id: Joi.string().uuid(),
             tenant_id: Joi.string().uuid(),
             label: Joi.string().max(100).allow(null),
             description: Joi.alternatives().try(
