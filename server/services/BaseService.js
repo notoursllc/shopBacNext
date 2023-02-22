@@ -29,4 +29,21 @@ export default class BaseService {
         }
     }
 
+
+    getValidationSchemaForPagination() {
+        return {
+            _sort: Joi.string().max(50),
+
+            _pageSize: Joi.alternatives().try(
+                Joi.number().integer().min(0),
+                Joi.string().max(5)
+            ),
+
+            _page: Joi.alternatives().try(
+                Joi.number().integer().min(0),
+                Joi.string().max(5)
+            )
+        };
+    }
+
 }

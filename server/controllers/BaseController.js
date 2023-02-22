@@ -7,14 +7,14 @@ export default class BaseController {
     }
 
 
-    getServiceName() {
-        return this.service?.constructor.name
+    getControllerName() {
+        return this.constructor.name
     }
 
 
     async getByIdHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getServiceName()}.getOneHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.getOneHandler`, {
                 meta: {
                     query: request.query
                 }
@@ -25,7 +25,7 @@ export default class BaseController {
                 { id: request.query.id }
             );
 
-            global.logger.info(`RESPONSE: ${this.getServiceName()}.getOneHandler`, {
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.getOneHandler`, {
                 meta: response
             });
 
@@ -41,13 +41,16 @@ export default class BaseController {
 
     async createHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getServiceName()}.createHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.createHandler`, {
                 meta: request.payload
             });
 
-            const response = await this.service.dao.tenantCreate(request.knex, request.payload);
+            const response = await this.service.dao.create({
+                knex: request.knex,
+                data: request.payload
+            });
 
-            global.logger.info(`RESPONSE: ${this.getServiceName()}.createHandler`, {
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.createHandler`, {
                 meta: response
             });
 
@@ -63,17 +66,17 @@ export default class BaseController {
 
     async updateByIdHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getServiceName()}.updateHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.updateHandler`, {
                 meta: request.payload
             });
 
-            const response = await this.service.dao.tenantUpdate({
+            const response = await this.service.dao.update({
                 knex: request.knex,
                 where: { id: request.payload.id },
                 data: request.payload,
             });
 
-            global.logger.info(`RESPONSE: ${this.getServiceName()}.updateHandler`, {
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.updateHandler`, {
                 meta: response
             });
 
@@ -89,7 +92,7 @@ export default class BaseController {
 
     async searchHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getServiceName()}.searchHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.searchHandler`, {
                 meta: {
                     query: request.query
                 }
@@ -97,7 +100,7 @@ export default class BaseController {
 
             const response = await this.service.dao.search(request.knex, request.query);
 
-            global.logger.info(`RESPONSE: ${this.getServiceName()}.searchHandler`, {
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.searchHandler`, {
                 meta: {
                     num_results: response?.data?.length
                 }
@@ -115,7 +118,7 @@ export default class BaseController {
 
     async deleteHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getServiceName()}.deleteHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.deleteHandler`, {
                 meta: request.payload
             });
 
@@ -124,7 +127,7 @@ export default class BaseController {
                 { id: request.payload.id }
             );
 
-            global.logger.info(`RESPONSE: ${this.getServiceName()}.deleteHandler`, {
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.deleteHandler`, {
                 meta: response
             });
 

@@ -1,6 +1,7 @@
 import tables from '../utils/tables.js';
 import {
-    getSql_grantSelect
+    getSql_grantSelect,
+    getSql_grantSelectInsertUpdateDelete
 } from '../utils/policies.js';
 
 const tableName = tables.exchange_rates;
@@ -27,7 +28,8 @@ export function up(knex) {
             }
         ),
 
-        knex.raw( getSql_grantSelect(tableName) )
+        // knex.raw( getSql_grantSelect(tableName) )
+        knex.raw( getSql_grantSelectInsertUpdateDelete(tableName) ),
     ]);
 };
 

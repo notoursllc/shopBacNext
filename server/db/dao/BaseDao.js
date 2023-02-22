@@ -54,7 +54,6 @@ export default class BaseDao {
     }
 
 
-
     async search(knex, query, columns) {
         try {
             const qb = knex
@@ -98,6 +97,72 @@ export default class BaseDao {
     }
 
 
+    async create(config) {
+        assertKnex(config);
+        assertData(config);
+
+        try {
+            const knex = config.knex;
+
+            const payload = this.prepareForUpsert(config.data);
+            if(this.tableName !== this.tables.tenants && this.schema.hasOwnProperty('tenant_id')) {
+                payload.tenant_id = knex.tenant_id;
+            }
+
+            // awaiting the reponse will cause errors to be caught
+            // in the catch block.  Otherwise the errors will be returned,
+            // which may lead DB query info
+            const response = await knex
+                .returning(config.returning || this.getAllColumns())
+                .insert(payload)
+                .into(this.tableName);
+
+            return response;
+        }
+        catch(err) {
+            console.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
+    async update(config) {
+        assertKnex(config);
+        assertWhere(config);
+        assertData(config);
+
+        try {
+            const knex = config.knex;
+
+            const payload = this.prepareForUpsert(config.data);
+            delete payload.id;
+            payload.updated_at = knex.fn.now();
+
+            if(this.tableName !== this.tables.tenants && this.schema.hasOwnProperty('tenant_id')) {
+                payload.tenant_id = knex.tenant_id;
+            }
+
+            const qb = knex(this.tableName)
+                .returning(config.returning || this.getAllColumns())
+                .where(config.where);
+
+            if(this.isSoftDelete()) {
+                qb.whereNull('deleted_at')
+            }
+
+            // awaiting the reponse will cause errors to be caught
+            // in the catch block.  Otherwise the errors will be returned,
+            // which may lead DB query info
+            const response = await qb.update(payload);
+            return response[0];
+        }
+        catch(err) {
+            global.logger.error(err);
+            throw new Error(GERNERIC_ERROR_MSG);
+        }
+    }
+
+
     /*
     * Deletes a record
     * http://knexjs.org/#Builder-del%20/%20delete
@@ -128,89 +193,6 @@ export default class BaseDao {
         }
         catch(err) {
             global.logger.error(err);
-            throw new Error(GERNERIC_ERROR_MSG);
-        }
-    }
-
-
-    async update(config) {
-        assertKnex(config);
-        assertWhere(config);
-        assertData(config);
-
-        try {
-            const knex = config.knex;
-            const payload = this.prepareForUpsert(config.data);
-            delete payload.id;
-            payload.updated_at = knex.fn.now();
-
-            const qb = knex(this.tableName)
-                .returning(config.returning || this.getAllColumns())
-                .where(config.where);
-
-            if(this.isSoftDelete()) {
-                qb.whereNull('deleted_at')
-            }
-
-            // awaiting the reponse will cause errors to be caught
-            // in the catch block.  Otherwise the errors will be returned,
-            // which may lead DB query info
-            const response = await qb.update(payload);
-            return response[0];
-        }
-        catch(err) {
-            global.logger.error(err);
-            throw new Error(GERNERIC_ERROR_MSG);
-        }
-    }
-
-
-    tenantUpdate(config) {
-        assertKnex(config);
-        assertData(config);
-
-        try {
-            if(this.tableName !== this.tables.tenants) {
-                config.data.tenant_id = config.knex.tenant_id;
-            }
-
-            return this.update(config);
-        }
-        catch(err) {
-            global.logger.error(err);
-            throw new Error(GERNERIC_ERROR_MSG);
-        }
-    }
-
-
-    async create(knex, data) {
-        try {
-            // awaiting the reponse will cause errors to be caught
-            // in the catch block.  Otherwise the errors will be returned,
-            // which may lead DB query info
-            const response = await knex
-                .returning(this.getAllColumns())
-                .insert( this.prepareForUpsert(data) )
-                .into(this.tableName);
-
-            return response;
-        }
-        catch(err) {
-            console.error(err);
-            throw new Error(GERNERIC_ERROR_MSG);
-        }
-    }
-
-
-    tenantCreate(knex, data) {
-        try {
-            const payload = {...data};
-            payload.tenant_id = knex.tenant_id;
-
-            return this.create(knex, payload);
-        }
-        catch(err) {
-            console.error(err);
             throw new Error(GERNERIC_ERROR_MSG);
         }
     }
@@ -441,23 +423,6 @@ export default class BaseDao {
         });
 
         return data;
-    }
-
-
-    getPaginationSchema() {
-        return {
-            _sort: Joi.string().max(50),
-
-            _pageSize: Joi.alternatives().try(
-                Joi.number().integer().min(0),
-                Joi.string().max(5)
-            ),
-
-            _page: Joi.alternatives().try(
-                Joi.number().integer().min(0),
-                Joi.string().max(5)
-            )
-        };
     }
 
 }

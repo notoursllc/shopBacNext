@@ -23,7 +23,7 @@ export default class PackageTypeController extends BaseController {
 
             ordinals.forEach((obj) => {
                 promises.push(
-                    this.service.dao.tenantUpdate({
+                    this.service.dao.update({
                         knex: request.knex,
                         where: { id: obj.id },
                         data: { ordinal: obj.ordinal },

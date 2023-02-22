@@ -1,10 +1,7 @@
 import Joi from 'joi';
 import MasterTypeController from '../../../controllers/MasterTypeController.js';
-import MasterTypeService from '../../../services/MasterTypeService.js';
 
 const MasterTypeCtrl = new MasterTypeController();
-const MasterTypeSvc = new MasterTypeService();
-
 
 export default (server) => {
     server.route([
@@ -18,7 +15,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...MasterTypeSvc.dao.getPaginationSchema(),
+                        ...MasterTypeCtrl.service.getValidationSchemaForPagination(),
                     })
                 },
                 handler: (request, h) => {
@@ -33,7 +30,7 @@ export default (server) => {
                 description: 'Gets an master type by ID',
                 validate: {
                     query: Joi.object({
-                        ...MasterTypeSvc.getIdValidationSchema()
+                        ...MasterTypeCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
@@ -48,7 +45,7 @@ export default (server) => {
                 description: 'Adds a new master type',
                 validate: {
                     payload: Joi.object({
-                        ...MasterTypeSvc.getValidationSchemaForAdd(),
+                        ...MasterTypeCtrl.service.getValidationSchemaForAdd(),
                     })
                 },
                 handler: (request, h) => {
@@ -63,7 +60,7 @@ export default (server) => {
                 description: 'Updates master type',
                 validate: {
                     payload: Joi.object({
-                        ...MasterTypeSvc.getValidationSchemaForUpdate()
+                        ...MasterTypeCtrl.service.getValidationSchemaForUpdate()
                     })
                 },
                 handler: (request, h) => {
@@ -78,7 +75,7 @@ export default (server) => {
                 description: 'Bulk update master type ordinals',
                 validate: {
                     payload: Joi.object({
-                        ...MasterTypeSvc.getValidationSchemaForUpdateOrdinals()
+                        ...MasterTypeCtrl.service.getValidationSchemaForUpdateOrdinals()
                     })
                 },
                 handler: (request, h) => {
@@ -93,7 +90,7 @@ export default (server) => {
                 description: 'Deletes a master type',
                 validate: {
                     payload: Joi.object({
-                        ...MasterTypeSvc.getIdValidationSchema()
+                        ...MasterTypeCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {

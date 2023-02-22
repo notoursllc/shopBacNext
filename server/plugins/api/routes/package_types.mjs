@@ -1,10 +1,7 @@
 import Joi from 'joi';
 import PackageTypeController from '../../../controllers/PackageTypeController.js';
-import PackageTypeService from '../../../services/PackageTypeService.js';
 
 const PackageTypeCtrl = new PackageTypeController();
-const PackageTypeSvc = new PackageTypeService();
-
 
 export default (server) => {
     server.route([
@@ -18,7 +15,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...PackageTypeSvc.dao.getPaginationSchema(),
+                        ...PackageTypeCtrl.service.getValidationSchemaForPagination(),
                     })
                 },
                 handler: (request, h) => {
@@ -36,7 +33,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...PackageTypeSvc.getIdValidationSchema()
+                        ...PackageTypeCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
@@ -51,7 +48,7 @@ export default (server) => {
                 description: 'Adds a new package type',
                 validate: {
                     payload: Joi.object({
-                        ...PackageTypeSvc.getValidationSchemaForAdd()
+                        ...PackageTypeCtrl.service.getValidationSchemaForAdd()
                     })
                 },
                 handler: (request, h) => {
@@ -66,8 +63,8 @@ export default (server) => {
                 description: 'Updates a package type',
                 validate: {
                     payload: Joi.object({
-                        ...PackageTypeSvc.getIdValidationSchema(),
-                        ...PackageTypeSvc.getValidationSchemaForAdd()
+                        ...PackageTypeCtrl.service.getIdValidationSchema(),
+                        ...PackageTypeCtrl.service.getValidationSchemaForAdd()
                     })
                 },
                 handler: (request, h) => {
@@ -82,7 +79,7 @@ export default (server) => {
                 description: 'Bulk update package type ordinals',
                 validate: {
                     payload: Joi.object({
-                        ...PackageTypeSvc.getUpdateOrdinalsValidationSchema()
+                        ...PackageTypeCtrl.service.getUpdateOrdinalsValidationSchema()
                     })
                 },
                 handler: (request, h) => {
@@ -97,7 +94,7 @@ export default (server) => {
                 description: 'Deletes a package type by ID',
                 validate: {
                     payload: Joi.object({
-                        ...PackageTypeSvc.getIdValidationSchema()
+                        ...PackageTypeCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {

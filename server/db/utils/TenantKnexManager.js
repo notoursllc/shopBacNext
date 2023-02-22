@@ -52,9 +52,14 @@ export default class TenantKnexManager {
     getKnexForRequest(request) {
         // If there is no auth strategy defined for the route then I guess we need to use
         // the ID of the user that can bypass RLS right?
-        return this.getKnexForTenant(
-            request.auth.strategy ? request.auth?.credentials?.tenant_id : process.env.TENANT_ID_BYPASSRLS
-        );
+        const authStrategy = request.auth?.strategy;
+        let tenantId = process.env.TENANT_ID_BYPASSRLS;
+
+        if(authStrategy && authStrategy !== 'cronauth') {
+            tenantId = request.auth?.credentials?.tenant_id;
+        }
+
+        return this.getKnexForTenant(tenantId);
     }
 
     /*

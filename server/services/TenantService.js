@@ -86,7 +86,7 @@ export default class TenantService extends BaseService {
             }
         }
 
-        return this.dao.tenantUpdate({
+        return this.dao.update({
             knex: knex,
             where: { id },
             data: data,
@@ -97,7 +97,7 @@ export default class TenantService extends BaseService {
     async updateApiKey(knex, id) {
         const tokens = this.generateToken();
 
-        const response = this.dao.tenantUpdate({
+        const response = this.dao.update({
             knex: knex,
             where: { id },
             data: { auth_password: tokens.hashedToken }
@@ -109,7 +109,7 @@ export default class TenantService extends BaseService {
 
 
     async removeApiKey(knex, id) {
-        return this.dao.tenantUpdate({
+        return this.dao.update({
             knex: knex,
             where: { id },
             data: { auth_password: null }
