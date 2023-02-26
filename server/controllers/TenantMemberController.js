@@ -6,8 +6,7 @@ import TenantMemberService from '../services/TenantMemberService.js';
 export default class TenantMemberController extends BaseController {
 
     constructor() {
-        super();
-        this.TenantMemberService = new TenantMemberService();
+        super(new TenantMemberService());
     }
 
 
@@ -17,7 +16,7 @@ export default class TenantMemberController extends BaseController {
                 meta: request.payload
             });
 
-            const response = await this.TenantMemberService.dao.create({
+            const response = await this.service.dao.create({
                 knex: request.knex,
                 data: request.payload
             });
@@ -47,7 +46,7 @@ export default class TenantMemberController extends BaseController {
 
         let TenantMember;
         try {
-            TenantMember = await this.TenantMemberService.login(
+            TenantMember = await this.service.login(
                 request.knex,
                 request.payload.email,
                 request.payload.password
@@ -58,7 +57,7 @@ export default class TenantMemberController extends BaseController {
         }
 
         try {
-            this.TenantMemberService.setCookieOnRequest(request, TenantMember.id);
+            this.service.setCookieOnRequest(request, TenantMember.id);
 
             global.logger.info('RESPONSE: TenantMemberController.loginHandler', {
                 meta: TenantMember

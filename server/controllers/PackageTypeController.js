@@ -27,7 +27,7 @@ export default class PackageTypeController extends BaseController {
                         knex: request.knex,
                         where: { id: obj.id },
                         data: { ordinal: obj.ordinal },
-                        returning: [ 'id', 'ordinal' ]
+                        columns: [ 'id', 'ordinal' ]
                     })
                 );
             });

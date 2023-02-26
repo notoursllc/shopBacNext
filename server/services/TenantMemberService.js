@@ -21,16 +21,11 @@ export default class TenantMemberService extends BaseService {
 
 
     async login(knex, email, password) {
-        const TenantMember = await this.dao.fetchOne(
-            knex,
-            {
-                email: email,
-                active: true
-            },
-            this.dao.getAllColumns(true)
-        );
-
-        // const TenantMember = await this.dao.search(knex, null, null, true);
+        const TenantMember = await this.dao.fetchOne({
+            knex: knex,
+            where: { email: email, active: true },
+            columns: this.dao.getAllColumns(true)
+        });
 
         if(!TenantMember || !bcrypt.compareSync(password, TenantMember.password)) {
             throw new Error('Unauthorized')

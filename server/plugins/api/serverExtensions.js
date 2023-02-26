@@ -53,11 +53,11 @@ export default (server) => {
         // keepAlive: true,
         validate: async (request, session) => {
             const knex = TenantKnexManager.getKnexForTenant(process.env.TENANT_ID_BYPASSRLS);
-            const tenantMember = await TenantMemberSvc.dao.fetchOne(
-                knex,
-                { id: session.id },
-                TenantMemberSvc.dao.getAllColumns(true)
-            );
+            const tenantMember = await TenantMemberSvc.dao.fetchOne({
+                knex: knex,
+                where: { id: session.id },
+                columns: TenantMemberSvc.dao.getAllColumns(true)
+            });
 
             global.logger.info('Cookie validate', {
                 meta: {

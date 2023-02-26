@@ -1,4 +1,3 @@
-import Joi from 'joi';
 import { assert }from '@hapi/hoek';
 import tables from '../utils/tables.js';
 import isObject from 'lodash.isobject';
@@ -37,7 +36,7 @@ export default class BaseDao {
 
 
     isSoftDelete() {
-        return this.hidden.includes('deleted_at')
+        return this.schema.hasOwnProperty('deleted_at');
     }
 
 
@@ -54,19 +53,28 @@ export default class BaseDao {
     }
 
 
-    async search(knex, query, columns) {
+    // async search(knex, query, columns) {
+    async search(config) {
+        assertKnex(config);
+
         try {
+            const knex = config.knex;
+
             const qb = knex
-                .select(columns || this.getAllColumns())
+                .select(config.columns || this.getAllColumns())
                 .from(this.tableName);
 
-            this.buildFilters(query, qb);
+            if(config.where) {
+                this.buildFilters(config.where, qb);
+            }
 
-            if(this.isSoftDelete()) {
+            // Dont interfere with the deleted_at query if the user
+            // has specified it in the config.where
+            if(!config.where?.hasOwnProperty('deleted_at') && this.isSoftDelete()) {
                 qb.whereNull('deleted_at')
             }
 
-            const response = await this.paginate(query, qb);
+            const response = await this.paginate(config.where, qb);
             return response;
         }
         catch(err) {
@@ -76,14 +84,31 @@ export default class BaseDao {
     }
 
 
-    async fetchOne(knex, whereConfig, columns) {
-        try {
-            const qb = knex
-                .select(Array.isArray(columns) ? columns : this.getAllColumns())
-                .from(this.tableName)
-                .where(whereConfig);
+    /**
+    * Gets one DB record
+    *
+    * Config: {
+    *   knex: required
+    *   where: optional
+    *   data: N/A
+    *   columns: optional
+    * }
+    */
+    async fetchOne(config) {
+        assertKnex(config);
 
-            if(this.schema.deleted_at) {
+        try {
+            const knex = config.knex;
+
+            const qb = knex
+                .select(config.columns || this.getAllColumns())
+                .from(this.tableName);
+
+            if(config.where) {
+                qb.where(config.where);
+            }
+
+            if(!config.where?.hasOwnProperty('deleted_at') && this.isSoftDelete()) {
                 qb.whereNull('deleted_at')
             }
 
@@ -97,6 +122,16 @@ export default class BaseDao {
     }
 
 
+    /**
+    * Creates a DB record
+    *
+    * Config: {
+    *   knex: required
+    *   where: N/A
+    *   data: required
+    *   columns: optional
+    * }
+    */
     async create(config) {
         assertKnex(config);
         assertData(config);
@@ -113,7 +148,7 @@ export default class BaseDao {
             // in the catch block.  Otherwise the errors will be returned,
             // which may lead DB query info
             const response = await knex
-                .returning(config.returning || this.getAllColumns())
+                .returning(config.columns || this.getAllColumns())
                 .insert(payload)
                 .into(this.tableName);
 
@@ -126,6 +161,16 @@ export default class BaseDao {
     }
 
 
+    /**
+    * Updates a DB record
+    *
+    * Config: {
+    *   knex: required
+    *   where: required
+    *   data: required
+    *   columns: optional
+    * }
+    */
     async update(config) {
         assertKnex(config);
         assertWhere(config);
@@ -143,9 +188,10 @@ export default class BaseDao {
             }
 
             const qb = knex(this.tableName)
-                .returning(config.returning || this.getAllColumns())
+                .returning(config.columns || this.getAllColumns())
                 .where(config.where);
 
+            // Dont allow soft-deleted rows to be updated
             if(this.isSoftDelete()) {
                 qb.whereNull('deleted_at')
             }
@@ -164,32 +210,39 @@ export default class BaseDao {
 
 
     /*
-    * Deletes a record
+    * Deletes a DB record
     * http://knexjs.org/#Builder-del%20/%20delete
+    *
+    * Config: {
+    *   knex: required
+    *   where: required
+    *   columns: optional
+    * }
     */
-    async del(knex, whereObj) {
+    async del(config) {
+        assertKnex(config);
+        assertWhere(config);
+
         try {
+            const knex = config.knex;
+
             const qb = knex
                 .from(this.tableName)
-                .returning('id')
-                .where(whereObj);
+                .returning(config.columns || 'id')
+                .where(config.where);
 
-            const returnObj = { id: null };
+            let dbResponse;
 
             if(this.isSoftDelete()) {
-                const updateResponse = await qb.whereNull('deleted_at').update({
+                dbResponse = await qb.whereNull('deleted_at').update({
                     deleted_at: knex.fn.now()
                 });
-
-                returnObj.id = updateResponse?.[0]?.id || null;
             }
             else {
-                // or hard delete
-                const delResponse = await qb.del();
-                returnObj.id = delResponse?.[0]?.id || null;
+                dbResponse = await qb.del();
             }
 
-            return returnObj;
+            return dbResponse?.[0] || {};
         }
         catch(err) {
             global.logger.error(err);
@@ -384,7 +437,6 @@ export default class BaseDao {
     formatForUpsert(data) {
         return data;
     }
-
 
 
     prepareForUpsert(data) {

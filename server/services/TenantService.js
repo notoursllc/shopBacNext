@@ -26,7 +26,10 @@ export default class TenantService extends BaseService {
     async getSupportedCurrenyRates(knex) {
         const result = await Promise.all([
             this.ExchangeRateService.fetchRate(knex),
-            this.dao.fetchOne(knex, { id: knex.tenant_id })
+            this.dao.fetchOne({
+                knex: knex,
+                where: { id: knex.tenant_id }
+            })
         ]);
 
         const ExchangeRate = result[0];
@@ -57,7 +60,10 @@ export default class TenantService extends BaseService {
 
 
     async update(knex, id, data) {
-        const Tenant = await this.dao.fetchOne(knex, { id });
+        const Tenant = await this.dao.fetchOne({
+            knex: knex,
+            where: { id }
+        });
 
         if(!Tenant) {
             throw new Error('Tenant can not be found');
@@ -125,7 +131,10 @@ export default class TenantService extends BaseService {
      * @param {*} id
      */
     async fetchAccount(knex, id) {
-        const Tenant = await this.dao.fetchOne(knex, { id });
+        const Tenant = await this.dao.fetchOne({
+            knex: knex,
+            where: { id }
+        });
 
         if(!Tenant) {
             return;
@@ -178,9 +187,9 @@ export default class TenantService extends BaseService {
             }
 
             const _knex = this.TenantKnexManager.getKnexForTenant(process.env.TENANT_ID_BYPASSRLS);
-            const tenantData = await this.dao.fetchOne(_knex, {
-                id: tenant_id,
-                active: true
+            const tenantData = await this.dao.fetchOne({
+                knex: _knex,
+                where: { id: tenant_id, active: true }
             });
 
             if(!tenantData) {

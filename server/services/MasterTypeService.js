@@ -17,26 +17,4 @@ export default class MasterTypeService extends BaseService {
         return schema;
     }
 
-    getValidationSchemaForUpdate() {
-        return {
-            ...this.getIdValidationSchema(),
-            ...super.getValidationSchemaForAdd()
-        };
-    }
-
-
-    getValidationSchemaForUpdateOrdinals() {
-        return {
-            ordinals: Joi.alternatives().try(
-                Joi.array().items(
-                    Joi.object().keys({
-                        ...this.getIdValidationSchema(),
-                        ordinal: Joi.number().integer().required()
-                    })
-                ),
-                Joi.string().trim()
-            )
-        }
-    }
-
 }

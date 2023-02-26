@@ -12,13 +12,19 @@ export default class BaseService {
     }
 
 
-    getValidationSchemaForAdd() {
+    getValidationSchemaForUpdate() {
         const schemaCopy = { ...this.dao.schema };
-        delete schemaCopy.id;
         delete schemaCopy.tenant_id;
         delete schemaCopy.created_at;
         delete schemaCopy.updated_at;
         delete schemaCopy.deleted_at;
+        return schemaCopy;
+    }
+
+
+    getValidationSchemaForAdd() {
+        const schemaCopy = this.getValidationSchemaForUpdate();
+        delete schemaCopy.id;
         return schemaCopy;
     }
 
@@ -44,6 +50,21 @@ export default class BaseService {
                 Joi.string().max(5)
             )
         };
+    }
+
+
+    getValidationSchemaForUpdateOrdinals() {
+        return {
+            ordinals: Joi.alternatives().try(
+                Joi.array().items(
+                    Joi.object().keys({
+                        ...this.getIdValidationSchema(),
+                        ordinal: Joi.number().integer().required()
+                    })
+                ),
+                Joi.string().trim()
+            )
+        }
     }
 
 }

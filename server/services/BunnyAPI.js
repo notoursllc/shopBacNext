@@ -166,10 +166,19 @@ const api = {
 
         del: async (id) => {
             try {
+                global.logger.info(`REQUEST: BunnyAPI.video.del`, {
+                    meta: { id }
+                });
+
                 const a = api.video.getAxios();
                 a.defaults.baseURL += `/${id}`;
 
                 const res = await a.delete();
+
+                global.logger.info('RESPONSE: BunnyAPI.video.del', {
+                    meta: { ...res.data }
+                });
+
                 return res.data;
             }
             catch (error) {

@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom';
+import isString from 'lodash.isstring';
 
 export default class BaseController {
 
@@ -20,10 +21,10 @@ export default class BaseController {
                 }
             });
 
-            const response = await this.service.dao.fetchOne(
-                request.knex,
-                { id: request.query.id }
-            );
+            const response = await this.service.dao.fetchOne({
+                knex: request.knex,
+                where: { id: request.query.id }
+            });
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.getOneHandler`, {
                 meta: response
@@ -98,7 +99,10 @@ export default class BaseController {
                 }
             });
 
-            const response = await this.service.dao.search(request.knex, request.query);
+            const response = await this.service.dao.search({
+                knex: request.knex,
+                where: request.query
+            });
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.searchHandler`, {
                 meta: {
@@ -130,6 +134,42 @@ export default class BaseController {
             global.logger.info(`RESPONSE: ${this.getControllerName()}.deleteHandler`, {
                 meta: response
             });
+
+            return h.apiSuccess(response);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
+    async bulkUpdateOrdinalsHandler(request, h) {
+        try {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.bulkUpdateOrdinalsHandler`, {
+                meta: request.payload.ordinals
+            });
+
+            const promises = [];
+            const ordinals = isString(request.payload.ordinals)
+                ? JSON.parse(request.payload.ordinals)
+                : [...request.payload.ordinals];
+
+            ordinals.forEach((obj) => {
+                promises.push(
+                    this.service.dao.update({
+                        knex: request.knex,
+                        where: { id: obj.id },
+                        data: { ordinal: obj.ordinal },
+                        columns: [ 'id', 'ordinal' ]
+                    })
+                );
+            });
+
+            const response = await Promise.all(promises);
+
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.bulkUpdateOrdinalsHandler`);
 
             return h.apiSuccess(response);
         }

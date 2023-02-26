@@ -19,10 +19,10 @@ export default class TenantController extends BaseController {
                 }
             });
 
-            const response = await this.TenantService.dao.fetchOne(
-                request.knex,
-                { id: this.TenantService.getTenantIdFromAuth(request) }
-            );
+            const response = await this.TenantService.dao.fetchOne({
+                knex: request.knex,
+                where: { id: this.TenantService.getTenantIdFromAuth(request) }
+            });
 
             if(!response) {
                 throw new Error('Tenant can not be found');

@@ -6,7 +6,9 @@ import serverExtensions from './serverExtensions.js';
 // routes
 import coreRoutes from './routes/core.mjs';
 import exchangeRateRoutes from './routes/exchange_rates.mjs';
+import heroRoutes from './routes/heros.mjs';
 import masterTypeRoutes from './routes/master_types.mjs';
+import mediaRoutes from './routes/media.mjs';
 import packageTypeRoutes from './routes/package_types.mjs';
 import productRoutes from './routes/product.mjs';
 import tenantRoutes from './routes/tenant.mjs';
@@ -32,7 +34,9 @@ export default {
                     serverExtensions(server);
                     coreRoutes(server);
                     exchangeRateRoutes(server);
+                    heroRoutes(server);
                     masterTypeRoutes(server);
+                    mediaRoutes(server);
                     packageTypeRoutes(server);
                     productRoutes(server);
                     tenantRoutes(server);

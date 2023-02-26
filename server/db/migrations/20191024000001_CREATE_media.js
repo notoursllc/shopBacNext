@@ -2,7 +2,7 @@ import tables from '../utils/tables.js';
 import {
     getSql_enableRlsPolicyOnTable,
     getSql_createPolicyEnableAllBasedOnTenantId,
-    getSql_grantSelectInsertUpdate
+    getSql_grantSelectInsertUpdateDelete
 } from '../utils/policies.js';
 
 const tableName = tables.media;
@@ -24,7 +24,6 @@ export function up(knex) {
                 // TIMESTAMPS
                 t.timestamp('created_at', true).notNullable().defaultTo(knex.fn.now());
                 t.timestamp('updated_at', true).nullable();
-                t.timestamp('deleted_at', true).nullable();
 
                 t.index([
                     'id',
@@ -35,7 +34,7 @@ export function up(knex) {
 
         knex.raw( getSql_enableRlsPolicyOnTable(tableName) ),
         knex.raw( getSql_createPolicyEnableAllBasedOnTenantId(tableName) ),
-        knex.raw( getSql_grantSelectInsertUpdate(tableName) ),
+        knex.raw( getSql_grantSelectInsertUpdateDelete(tableName) ),
     ]);
 };
 

@@ -2,7 +2,7 @@ import Joi from 'joi';
 import BaseDao from './BaseDao.js';
 
 
-export default class ExchangeRate extends BaseDao {
+export default class ExchangeRateDao extends BaseDao {
 
     constructor() {
         super();
