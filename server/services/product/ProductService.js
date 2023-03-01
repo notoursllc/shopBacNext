@@ -36,6 +36,27 @@ export default class ProductService extends BaseService {
     }
 
 
+    async getProduct(knex, id) {
+        return knex.client.transaction(async trx => {
+            const product = await this.dao.fetchOne({
+                knex: trx,
+                where: { id }
+            });
+
+            if(product) {
+                await Promise.all([
+                    this.ProductVariantService.addRelationToProducts(trx, product),
+                    this.ProductArtistService.addRelationToProducts(trx, product)
+                ]);
+
+                this.addVirtuals(product);
+            }
+
+            return product;
+        });
+    }
+
+
     addVirtuals(products) {
         makeArray(products).forEach((prod) => {
             // packing_volume_cm

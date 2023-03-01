@@ -19,7 +19,25 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return ProductCtrl.getProducts(request, h)
+                    return ProductCtrl.getProductsHandler(request, h)
+                }
+            }
+        },
+        {
+            method: 'GET',
+            path: '/product',
+            options: {
+                description: 'Gets a product',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                validate: {
+                    query: Joi.object({
+                        ...ProductCtrl.service.getIdValidationSchema()
+                    })
+                },
+                handler: (request, h) => {
+                    return ProductCtrl.getProductHandler(request, h)
                 }
             }
         }
