@@ -27,12 +27,7 @@ function seed(knex) {
                             knex(tables.product_collections).insert({
                                 published: true,
                                 tenant_id: tenantId,
-                                name: obj.name,
-                                value: obj.value,
-                                description: obj.description,
-                                seo_page_title: obj.seo_page_title,
-                                seo_page_desc: obj.seo_page_desc,
-                                seo_uri: obj.seo_uri
+                                ...obj
                             })
                         )
                     });

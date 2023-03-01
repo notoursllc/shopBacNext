@@ -86,10 +86,8 @@ function seed(knex) {
                                     tenant_id: tenantId,
                                     published: true,
                                     object: key,
-                                    name: obj.name,
-                                    slug: obj.slug,
+                                    ...obj,
                                     value: fibonacci,
-                                    description: obj.description || '',
                                     metadata: JSON.stringify([
                                         obj.metadata || {"property":"sample","value":"meta data"}
                                     ]),

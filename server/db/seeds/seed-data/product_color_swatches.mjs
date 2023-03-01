@@ -21,9 +21,7 @@ function seed(knex) {
                         promises.push(
                             knex(tables.product_color_swatches).insert({
                                 tenant_id: tenantId,
-                                hex: obj.hex,
-                                label: obj.label,
-                                description: obj.description
+                                ...obj
                             })
                         )
                     });

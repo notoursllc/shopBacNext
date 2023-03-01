@@ -114,13 +114,7 @@ function seed(knex) {
                         promises.push(
                             knex(tables.package_types).insert({
                                 tenant_id: tenantId,
-                                label: obj.label,
-                                description: obj.description,
-                                notes: obj.notes,
-                                length_cm: obj.length_cm,
-                                width_cm: obj.width_cm,
-                                height_cm: obj.height_cm,
-                                ordinal: obj.ordinal
+                                ...obj
                             }),
                         )
                     });
