@@ -1,7 +1,4 @@
-const { DB_TABLES } = require('../../plugins/core/services/CoreService');
-
-const faker = require('faker');
-const randomUuid = faker.random.uuid;
+import tables from '../../utils/tables.js';
 
 /**
  * Rounds a number down to the nearest whole cm
@@ -15,22 +12,19 @@ function inchesToCm(inches) {
     return Number.parseFloat(inches * 2.54).toFixed(2);
 }
 
-exports.seed = (knex) => {
-    return knex(DB_TABLES.package_types)
+function seed(knex) {
+    return knex(tables.package_types)
         .del()
         // .then(() => {
         //     return knex.raw(`ALTER SEQUENCE ${DB_TABLES.product_artists}_id_seq RESTART WITH 1`);
         // })
         .then(
             () => {
-                const promises = [];
-                const d = new Date();
-
                 /*
                 * A few of these boxes are similar but it would be good
                 * to know which ones over time are the most used
                 */
-                [
+                const data = [
                     {
                         label: 'Priority Mail Box - 4',
                         description: '7"(L) x 7"(W) x 6"(H)',
@@ -111,25 +105,36 @@ exports.seed = (knex) => {
                         height_cm: inchesToCm(5.25),
                         ordinal: 9
                     }
-                ].forEach((obj) => {
-                    promises.push(
-                        knex(DB_TABLES.package_types).insert({
-                            id: randomUuid(),
-                            tenant_id: process.env.TEST_TENANT_ID,
-                            label: obj.label,
-                            description: obj.description,
-                            notes: obj.notes,
-                            length_cm: obj.length_cm,
-                            width_cm: obj.width_cm,
-                            height_cm: obj.height_cm,
-                            ordinal: obj.ordinal,
-                            created_at: d,
-                            updated_at: d
-                        }),
-                    )
-                });
+                ];
+
+                const promises = [];
+
+                function makeTenantData(tenantId) {
+                    data.forEach((obj) => {
+                        promises.push(
+                            knex(tables.package_types).insert({
+                                tenant_id: tenantId,
+                                label: obj.label,
+                                description: obj.description,
+                                notes: obj.notes,
+                                length_cm: obj.length_cm,
+                                width_cm: obj.width_cm,
+                                height_cm: obj.height_cm,
+                                ordinal: obj.ordinal
+                            }),
+                        )
+                    });
+                }
+
+                makeTenantData(process.env.TEST_TENANT_ID);
+                makeTenantData('22222222-2222-2222-2222-222222222222');
 
                 return Promise.all(promises);
             }
         );
 };
+
+
+export default {
+    seed
+}

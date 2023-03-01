@@ -1,20 +1,14 @@
-const { DB_TABLES } = require('../../plugins/core/services/CoreService');
+import tables from '../../utils/tables.js';
 
-const faker = require('faker');
-const randomUuid = faker.random.uuid;
-
-exports.seed = (knex) => {
-    return knex(DB_TABLES.product_collections)
+function seed(knex) {
+    return knex(tables.product_artists)
         .del()
         // .then(() => {
-        //     return knex.raw(`ALTER SEQUENCE ${DB_TABLES.product_artists}_id_seq RESTART WITH 1`);
+        //     return knex.raw(`ALTER SEQUENCE ${tables.product_artists}_id_seq RESTART WITH 1`);
         // })
         .then(
             () => {
-                const promises = [];
-                const d = new Date();
-
-                [
+                const data = [
                     {
                         published: true,
                         name: 'Wayne Gretzky',
@@ -42,25 +36,35 @@ exports.seed = (knex) => {
                         state: 'CA',
                         countryCodeAlpha2: 'US'
                     }
-                ].forEach((obj) => {
-                    promises.push(
-                        knex(DB_TABLES.product_artists).insert({
-                            id: randomUuid(),
-                            tenant_id: process.env.TEST_TENANT_ID,
-                            published: obj.published,
-                            name: obj.name,
-                            description: obj.description,
-                            website: obj.website,
-                            city: obj.city,
-                            state: obj.state,
-                            countryCodeAlpha2: obj.countryCodeAlpha2,
-                            created_at: d,
-                            updated_at: d
-                        })
-                    )
-                });
+                ];
+
+                const promises = [];
+
+                function makeTenantData(tenantId) {
+                    data.forEach((obj) => {
+                        promises.push(
+                            knex(tables.product_artists).insert({
+                                tenant_id: tenantId,
+                                published: obj.published,
+                                name: obj.name,
+                                description: obj.description,
+                                website: obj.website,
+                                city: obj.city,
+                                state: obj.state,
+                                countryCodeAlpha2: obj.countryCodeAlpha2,
+                            })
+                        )
+                    });
+                }
+
+                makeTenantData(process.env.TEST_TENANT_ID);
+                makeTenantData('22222222-2222-2222-2222-222222222222');
 
                 return Promise.all(promises);
             }
         );
-};
+}
+
+export default {
+    seed
+}

@@ -1,10 +1,7 @@
-const { DB_TABLES } = require('../../plugins/core/services/CoreService');
+import tables from '../../utils/tables.js';
 
-const faker = require('faker');
-const randomUuid = faker.random.uuid;
-
-exports.seed = (knex) => {
-    return knex(DB_TABLES.master_types)
+function seed(knex) {
+    return knex(tables.master_types)
         .del()
         // .then(() => {
         //     return knex.raw(`ALTER SEQUENCE ${DB_TABLES.product_artists}_id_seq RESTART WITH 1`);
@@ -73,39 +70,46 @@ exports.seed = (knex) => {
                         { name: '4XL', slug: '4XL' },
                         { name: '5XL', slug: '5XL' }
                     ]
+                };
+
+
+                function makeTenantData(tenantId) {
+                    for(const key in sampleData) {
+                        const fibs = [];
+
+                        sampleData[key].forEach((obj, index) => {
+                            const fibonacci = index === 0 ? 1 : fibs[index-1] * 2
+                            fibs.push(fibonacci)
+
+                            promises.push(
+                                knex(tables.master_types).insert({
+                                    tenant_id: tenantId,
+                                    published: true,
+                                    object: key,
+                                    name: obj.name,
+                                    slug: obj.slug,
+                                    value: fibonacci,
+                                    description: obj.description || '',
+                                    metadata: JSON.stringify([
+                                        obj.metadata || {"property":"sample","value":"meta data"}
+                                    ]),
+                                    ordinal: index + 1
+                                })
+                            )
+                        })
+                    }
                 }
 
-                const d = new Date();
 
-                for(const key in sampleData) {
-                    const fibs = [];
-
-                    sampleData[key].forEach((obj, index) => {
-                        const fibonacci = index === 0 ? 1 : fibs[index-1] * 2
-                        fibs.push(fibonacci)
-
-                        promises.push(
-                            knex(DB_TABLES.master_types).insert({
-                                id: randomUuid(),
-                                tenant_id: process.env.TEST_TENANT_ID,
-                                published: true,
-                                object: key,
-                                name: obj.name,
-                                slug: obj.slug,
-                                value: fibonacci,
-                                description: obj.description || '',
-                                metadata: JSON.stringify([
-                                    obj.metadata || {"property":"sample","value":"meta data"}
-                                ]),
-                                ordinal: index + 1,
-                                created_at: d,
-                                updated_at: d
-                            })
-                        )
-                    })
-                }
+                makeTenantData(process.env.TEST_TENANT_ID);
+                makeTenantData('22222222-2222-2222-2222-222222222222');
 
                 return Promise.all(promises);
             }
         );
 };
+
+
+export default {
+    seed
+}
