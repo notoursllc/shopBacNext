@@ -1,12 +1,11 @@
 import Boom from '@hapi/boom';
 import BaseController from '../BaseController.js';
-// const ProductService = require('../../services/product/ProductService.js')
+import ProductService from '../../services/product/ProductService.js';
 
 export default class ProductController extends BaseController {
 
     constructor() {
-        super();
-        // this.ProductService = new ProductService();
+        super(new ProductService());
     }
 
 
@@ -18,19 +17,15 @@ export default class ProductController extends BaseController {
                 }
             });
 
-            // const data = await ProductService.getProducts(
-            //     request.knex,
-            //     request.query
-            // );
+            const data = await this.service.getProducts(request.knex, request.query);
 
-            // global.logger.info('RESPONSE: ProductController.getProducts', {
-            //     meta: {
-            //         numProducts: data.data.length
-            //     }
-            // });
+            global.logger.info('RESPONSE: ProductController.getProducts', {
+                meta: {
+                    numProducts: data.data.length
+                }
+            });
 
-            // return h.apiSuccess(data);
-            return h.apiSuccess({ test: 'test2'});
+            return h.apiSuccess(data);
         }
         catch(err) {
             // global.logger.error(err);

@@ -70,7 +70,7 @@ export default class BaseDao {
 
             // Dont interfere with the deleted_at query if the user
             // has specified it in the config.where
-            if(!config.where?.hasOwnProperty('deleted_at') && this.isSoftDelete()) {
+            if(!config.where?.deleted_at && this.isSoftDelete()) {
                 qb.whereNull('deleted_at')
             }
 
@@ -78,7 +78,8 @@ export default class BaseDao {
             return response;
         }
         catch(err) {
-            global.logger.error(err);
+            console.log("ERROR", err)
+            // global.logger.error(err);
             throw new Error(GERNERIC_ERROR_MSG);
         }
     }
@@ -457,7 +458,18 @@ export default class BaseDao {
     }
 
 
-    async addRelations(parentResults, childQuery, parentResultKey, childResultKey, relationName) {
+    /**
+     * For every parentResult, find all relations
+     *
+     * @param {*} parentResults
+     * @param {*} childQuery
+     * @param {*} parentResultKey
+     * @param {*} childResultKey
+     * @param {*} relationName
+     *
+     * @returns []
+     */
+    async addRelations(parentResults, parentResultKey, childQuery, childResultKey, relationName, oneToOne = false) {
         const whereInArray = [];
         const data = makeArray(parentResults)
 
@@ -470,7 +482,11 @@ export default class BaseDao {
         const relations = await childQuery.whereIn(childResultKey, whereInArray);
 
         data.map((row) => {
-            row[relationName] = relations.filter((r) => r[childResultKey] === row[parentResultKey])
+            const filteredRelations = relations.filter((r) => r[childResultKey] === row[parentResultKey]);
+            row[relationName] = oneToOne
+                ? (filteredRelations?.[0] || null)
+                : filteredRelations;
+
             return row;
         });
 

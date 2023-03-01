@@ -1,3 +1,4 @@
+import Joi from 'joi';
 import ProductController from '../../../controllers/product/ProductController.js';
 
 const ProductCtrl = new ProductController();
@@ -8,16 +9,15 @@ export default (server) => {
             method: 'GET',
             path: '/products',
             options: {
-                description: 'Finds a Hero object by ID',
-                // auth: {
-                //     strategies: ['storeauth', 'session']
-                // },
-                // validate: {
-                //     query: Joi.object({
-                //         id: Joi.string().uuid(),
-                //         tenant_id: Joi.string().uuid()
-                //     })
-                // },
+                description: 'Gets a list of products',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                validate: {
+                    query: Joi.object({
+                        ...ProductCtrl.service.getValidationSchemaForSearch()
+                    })
+                },
                 handler: (request, h) => {
                     return ProductCtrl.getProducts(request, h)
                 }

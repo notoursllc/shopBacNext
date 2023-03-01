@@ -10,7 +10,7 @@ import heroRoutes from './routes/heros.mjs';
 import masterTypeRoutes from './routes/master_types.mjs';
 import mediaRoutes from './routes/media.mjs';
 import packageTypeRoutes from './routes/package_types.mjs';
-import productRoutes from './routes/product.mjs';
+import productRoutes from './routes/products.mjs';
 import tenantRoutes from './routes/tenant.mjs';
 
 export default {
