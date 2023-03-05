@@ -1,4 +1,5 @@
 
+import Joi from 'joi';
 import BaseService from '../BaseService.js';
 import ProductVariantDao from '../../db/dao/product/ProductVariantDao.js';
 import ProductVariantSkuService from './ProductVariantSkuService.js'
@@ -51,6 +52,20 @@ export default class ProductVariantService extends BaseService {
         });
 
         return products;
+    }
+
+
+    getValidationSchemaForAdd() {
+        const schema = { ...super.getValidationSchemaForAdd() };
+        schema.published = schema.published.default(false);
+        schema.skus = Joi.alternatives().try(
+            Joi.allow(null),
+            Joi.array().items(
+                Joi.object(this.ProductVariantSkuService.getValidationSchemaForAdd())
+            )
+        );
+
+        return schema;
     }
 
 }

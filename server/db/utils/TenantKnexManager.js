@@ -33,6 +33,8 @@ export default class TenantKnexManager {
 
         // since functions are objects we can attach the tenant_id to the knex fn
         _knex.tenant_id = tenantId;
+        _knex.context.userParams.tenant_id = tenantId;
+        console.log("_knex", _knex)
 
         // If the cache is too big then remove the first item
 		if (this.knexCache.size > MAX_CONNECTION_CACHE) {

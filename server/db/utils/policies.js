@@ -12,7 +12,8 @@ export function getSql_createPolicyEnableAllBasedOnTenantId(tableName) {
     return `
         CREATE POLICY "Enable select based on tenant_id"
         ON ${tableName}
-        AS PERMISSIVE FOR ALL
+        AS PERMISSIVE
+        FOR ALL
         USING (tenant_id = current_setting('app.current_tenant')::uuid)
     `;
 };

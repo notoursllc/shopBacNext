@@ -1,4 +1,3 @@
-
 import BaseService from '../BaseService.js';
 import ProductVariantSkuDao from '../../db/dao/product/ProductVariantSkuDao.js';
 import { makeArray } from '../../utils/index.js';
@@ -70,6 +69,17 @@ export default class ProductVariantSkuService extends BaseService {
         });
 
         return products;
+    }
+
+
+    getValidationSchemaForAdd() {
+        const schema = { ...super.getValidationSchemaForAdd() };
+        schema.published = schema.published.default(false);
+        schema.is_on_sale = schema.is_on_sale.default(false);
+        schema.track_inventory_count = schema.track_inventory_count.default(true);
+        schema.visible_if_no_inventory = schema.visible_if_no_inventory.default(true);
+
+        return schema;
     }
 
 }
