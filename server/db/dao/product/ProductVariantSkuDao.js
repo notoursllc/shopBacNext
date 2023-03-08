@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import BaseDao from '../BaseDao.js';
-
+import { makeArray } from '../../../utils/index.js';
 
 export default class ProductVariantSkuDao extends BaseDao {
 
@@ -75,6 +75,21 @@ export default class ProductVariantSkuDao extends BaseDao {
             updated_at: Joi.date(),
             deleted_at: Joi.date()
         }
+    }
+
+
+    addVirtuals(data) {
+        makeArray(data).forEach((sku) => {
+            sku.display_price = (function(s) {
+                if(s.is_on_sale && s.sale_price !== null) {
+                    return s.sale_price;
+                }
+
+                return s.base_price;
+            })(sku);
+        });
+
+        return data;
     }
 
 }

@@ -9,7 +9,7 @@ export default class StripeService {
 
 
     async getStripe(knex) {
-        const Tenant = await this.TenantService.fetchAccount(knex, knex.tenant_id);
+        const Tenant = await this.TenantService.fetchAccount(knex, knex.userParams.tenant_id);
 
         if(!Tenant) {
             throw new Error('Unable to obtain Tenant');
@@ -39,6 +39,10 @@ export default class StripeService {
     // Products can not be deleted if it has a Price attached to it (which ours do)
     // so instead we mark it as active=false
     async archiveProduct(knex, stripe_product_id) {
+        if(!stripe_product_id) {
+            return;
+        }
+
         const stripe = await this.getStripe(knex);
         return stripe.products.update(stripe_product_id, { active: false });
     }
@@ -60,6 +64,10 @@ export default class StripeService {
     // Good explanation about this here:
     // https://github.com/stripe/stripe-python/issues/658
     async archivePrice(knex, stripe_price_id) {
+        if(!stripe_price_id) {
+            return;
+        }
+
         const stripe = await this.getStripe(knex);
         return stripe.prices.update(stripe_price_id, { active: false });
     }

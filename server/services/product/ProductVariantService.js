@@ -1,5 +1,7 @@
 
 import Joi from 'joi';
+import cloneDeep from 'lodash.clonedeep';
+import isString from 'lodash.isstring';
 import BaseService from '../BaseService.js';
 import ProductVariantDao from '../../db/dao/product/ProductVariantDao.js';
 import ProductVariantSkuService from './ProductVariantSkuService.js'
@@ -10,6 +12,64 @@ export default class ProductVariantService extends BaseService {
     constructor() {
         super(new ProductVariantDao());
         this.ProductVariantSkuService = new ProductVariantSkuService();
+    }
+
+
+    async upsert(knex, data, Product) {
+        global.logger.info('REQUEST: ProductVariantService.upsert', {
+            meta: data
+        });
+
+        const dataCopy = cloneDeep(data);
+        dataCopy.product_id = Product.id;
+        delete dataCopy.skus;
+
+        const daoConfig = {
+            knex: knex,
+            data: dataCopy
+        }
+
+        let ProductVariant;
+        if(dataCopy.id) {
+            ProductVariant = await this.dao.update({
+                ...daoConfig,
+                where: { id: dataCopy.id }
+            });
+        }
+        else {
+            ProductVariant = await this.dao.create(daoConfig);
+        }
+
+        data.skus?.forEach((sku) => {
+            sku.product_variant_id = ProductVariant.id;
+        })
+
+        return this.ProductVariantSkuService.upsertMultiple(knex, data.skus, Product);
+    }
+
+
+    upsertMultiple(knex, variants, Product) {
+        const promises = [];
+
+        let parsedVariants;
+        try {
+            if(isString(variants)) {
+                parsedVariants = JSON.parse(variants);
+            }
+        }
+        catch(err) {
+            global.logger.error('UNABLE TO PARSE VARIANTS', { meta: err } );
+        }
+
+        if(Product && Array.isArray(parsedVariants)) {
+            parsedVariants.forEach((variantData) => {
+                promises.push(
+                    this.upsert(knex, variantData, Product)
+                );
+            });
+        }
+
+        return Promise.all(promises);
     }
 
 
@@ -31,25 +91,9 @@ export default class ProductVariantService extends BaseService {
 
         await this.ProductVariantSkuService.addSkuRelationsToVariants(knex, products);
 
-        return this.addVirtuals(products);
-    }
-
-
-    addVirtuals(products) {
         makeArray(products).forEach((product) => {
-            makeArray(product.variants).forEach((variant) => {
-                // total_inventory_count
-                variant.total_inventory_count = (function(v) {
-                    let totalCount = 0;
-
-                    makeArray(v.skus).forEach((obj) => {
-                        totalCount += (obj.inventory_count || 0);
-                    });
-
-                    return totalCount;
-                })(variant);
-            });
-        });
+            this.dao.addVirtuals(product.variants);
+        })
 
         return products;
     }

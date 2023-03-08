@@ -61,13 +61,8 @@ export default (server) => {
             path: '/product',
             options: {
                 description: 'Creates a product',
-                payload: {
-                //     // output: 'stream',
-                //     output: 'file',
-                //     parse: true,
-                //     allow: 'multipart/form-data',
-                //     multipart: true,
-                    maxBytes: productUpsertMaxBytes,
+                auth: {
+                    strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
@@ -75,7 +70,25 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return ProductCtrl.createHandler(request, h);
+                    return ProductCtrl.upsertHandler(request, h);
+                }
+            }
+        },
+        {
+            method: 'PUT',
+            path: '/product',
+            options: {
+                description: 'Updates a product',
+                auth: {
+                    strategies: ['session']
+                },
+                validate: {
+                    payload: Joi.object({
+                        ...ProductCtrl.service.getValidationSchemaForUpdate()
+                    })
+                },
+                handler: (request, h) => {
+                    return ProductCtrl.upsertHandler(request, h);
                 }
             }
         },

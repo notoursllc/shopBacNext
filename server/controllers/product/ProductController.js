@@ -81,15 +81,15 @@ export default class ProductController extends BaseController {
     }
 
 
-    async createHandler(request, h) {
+    async upsertHandler(request, h) {
         try {
-            global.logger.info('REQUEST: ProductController.createHandler', {
+            global.logger.info('REQUEST: ProductController.upsertHandler', {
                 meta: request.payload
             });
 
-            const response = await this.service.create(request.knex, request.payload);
+            const response = await this.service.upsert(request.knex, request.payload);
 
-            global.logger.info('RESPONSE: ProductController.createHandler', {
+            global.logger.info('RESPONSE: ProductController.upsertHandler', {
                 meta: response
             });
 

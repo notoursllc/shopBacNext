@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import BaseDao from '../BaseDao.js';
+import { makeArray } from '../../../utils/index.js';
 
 const joiPositiveNumberOrNull = Joi.alternatives().try(
     Joi.number().integer().positive(),
@@ -91,6 +92,46 @@ export default class ProductDao extends BaseDao {
             created_at: Joi.date(),
             updated_at: Joi.date()
         }
+    }
+
+
+    formatForUpsert(data) {
+        // if (data.metadata) {
+        //     data.metadata = JSON.stringify(data.metadata)
+        // }
+
+        // if (data.video) {
+        //     data.video = JSON.stringify(data.video)
+        // }
+
+        return data;
+    }
+
+
+    addVirtuals(products) {
+        makeArray(products).forEach((prod) => {
+            // packing_volume_cm
+            prod.packing_volume_cm = (prod.packing_length_cm || 0)
+                * (prod.packing_width_cm || 0)
+                * (prod.packing_height_cm || 0);
+
+            // total_inventory_count
+            prod.total_inventory_count = (function(p) {
+                let totalCount = 0;
+
+                // https://bookshelfjs.org/api.html#Collection-instance-toArray
+                const variants = makeArray(p.variants);
+                if(variants.length) {
+                    variants.forEach((obj) => {
+                        totalCount += obj.total_inventory_count || 0;
+                    })
+                }
+
+                return totalCount;
+            })(prod);
+        });
+
+        return products;
     }
 
 }

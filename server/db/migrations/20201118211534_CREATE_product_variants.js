@@ -46,8 +46,8 @@ export function up(knex) {
                 t.uuid('product_id')
                     .notNullable()
                     .references('id')
-                    .inTable(tables.products);
-                // .onDelete('CASCADE');
+                    .inTable(tables.products)
+                    .onDelete('CASCADE');
 
                 t.index([
                     'id',

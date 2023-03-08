@@ -4,8 +4,6 @@ import BaseService from '../BaseService.js';
 import ProductDao from '../../db/dao/product/ProductDao.js';
 import ProductArtistService from './ProductArtistService.js';
 import ProductVariantService from './ProductVariantService.js';
-import { makeArray } from '../../utils/index.js';
-
 
 export default class ProductService extends BaseService {
 
@@ -24,12 +22,7 @@ export default class ProductService extends BaseService {
             });
 
             if(products?.data.length) {
-                await Promise.all([
-                    this.ProductVariantService.addRelationToProducts(trx, products.data),
-                    this.ProductArtistService.addRelationToProducts(trx, products.data)
-                ]);
-
-                this.addVirtuals(products.data);
+                await this.addRelations(trx, products.data);
             }
 
             return products;
@@ -37,43 +30,31 @@ export default class ProductService extends BaseService {
     }
 
 
-    async create(knex, data) {
+    async upsert(knex, data) {
+        global.logger.info('REQUEST: ProductService.upsert', {
+            meta: data
+        });
+
         // return knex.client.transaction(async trx => {
         return knex.transaction(async trx => {
             const prodData = { ...data };
             const variants = cloneDeep(prodData.variants);
             delete prodData.variants;
-            // prodData.tenant_id = knex.tenant_id;
 
-            console.log("PROD DATA", prodData)
-            console.log("TRX", trx)
-            console.log("knex", knex)
-
-            const response = await this.dao.create({
+            const Product = await this.dao.upsertOne({
                 knex: trx,
                 data: prodData
             });
 
-            // Upload the video and update the product
-            // if(data.video?.path) {
-            //     const uploadResponse = await BunnyAPI.video.upload(data.video.path);
-            //     if(uploadResponse?.directPlayUrl) {
-            //         this.dao.update({
-            //             knex: trx,
-            //             data: { video: uploadResponse.directPlayUrl },
-            //             where: { id: response.id }
-            //         });
-            //     }
-            // }
-
-
-
-            // TODO: create variants
-            if(response && variants) {
-
+            if(Product) {
+                await this.ProductVariantService.upsertMultiple(trx, variants, Product)
+                const UpdatedProduct = await this.dao.fetchOne({
+                    knex: trx,
+                    where: { id: Product.id }
+                });
+                await this.addRelations(trx, UpdatedProduct);
+                return UpdatedProduct;
             }
-
-
         });
     }
 
@@ -86,12 +67,7 @@ export default class ProductService extends BaseService {
             });
 
             if(product) {
-                await Promise.all([
-                    this.ProductVariantService.addRelationToProducts(trx, product),
-                    this.ProductArtistService.addRelationToProducts(trx, product)
-                ]);
-
-                this.addVirtuals(product);
+                await this.addRelations(trx, product);
             }
 
             return product;
@@ -99,35 +75,15 @@ export default class ProductService extends BaseService {
     }
 
 
-    addVirtuals(products) {
-        makeArray(products).forEach((prod) => {
-            // packing_volume_cm
-            prod.packing_volume_cm = (prod.packing_length_cm || 0)
-                * (prod.packing_width_cm || 0)
-                * (prod.packing_height_cm || 0);
-
-            // total_inventory_count
-            prod.total_inventory_count = (function(p) {
-                let totalCount = 0;
-
-                // https://bookshelfjs.org/api.html#Collection-instance-toArray
-                const variants = makeArray(p.variants);
-                if(variants.length) {
-                    variants.forEach((obj) => {
-                        totalCount += obj.total_inventory_count || 0;
-                    })
-                }
-
-                return totalCount;
-            })(prod);
-        });
-
-        return products;
+    addRelations(knex, products) {
+        return Promise.all([
+            this.ProductVariantService.addRelationToProducts(knex, products),
+            this.ProductArtistService.addRelationToProducts(knex, products)
+        ]);
     }
 
 
-    getValidationSchemaForAdd() {
-        const schema = { ...super.getValidationSchemaForAdd() };
+    setUpsertSchemaAdditions(schema) {
         schema.published = schema.published.default(false);
         schema.is_good = schema.is_good.default(true);
         schema.variants = Joi.alternatives().try(
@@ -135,8 +91,20 @@ export default class ProductService extends BaseService {
             Joi.array().items(
                 Joi.object(this.ProductVariantService.getValidationSchemaForAdd())
             )
-        )
+        );
+    }
 
+
+    getValidationSchemaForAdd() {
+        const schema = super.getValidationSchemaForAdd()
+        this.setUpsertSchemaAdditions(schema);
+        return schema;
+    }
+
+
+    getValidationSchemaForUpdate() {
+        const schema = super.getValidationSchemaForUpdate();
+        this.setUpsertSchemaAdditions(schema);
         return schema;
     }
 

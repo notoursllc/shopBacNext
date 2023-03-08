@@ -28,7 +28,7 @@ export default class TenantService extends BaseService {
             this.ExchangeRateService.fetchRate(knex),
             this.dao.fetchOne({
                 knex: knex,
-                where: { id: knex.tenant_id }
+                where: { id: knex.userParams.tenant_id }
             })
         ]);
 

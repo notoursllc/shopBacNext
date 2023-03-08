@@ -75,6 +75,8 @@ export default class BaseDao {
             }
 
             const response = await this.paginate(config.where, qb);
+            this.addVirtuals(response.data);
+
             return response;
         }
         catch(err) {
@@ -114,6 +116,9 @@ export default class BaseDao {
             }
 
             const response = await qb.first();
+
+            this.addVirtuals(response);
+
             return response;
         }
         catch(err) {
@@ -142,7 +147,7 @@ export default class BaseDao {
 
             const payload = this.prepareForUpsert(config.data);
             if(this.tableName !== this.tables.tenants && this.schema.hasOwnProperty('tenant_id')) {
-                payload.tenant_id = knex.tenant_id;
+                payload.tenant_id = knex.userParams.tenant_id;
             }
 
             // awaiting the reponse will cause errors to be caught
@@ -153,7 +158,9 @@ export default class BaseDao {
                 .insert(payload)
                 .into(this.tableName);
 
-            return response;
+            this.addVirtuals(response);
+
+            return Array.isArray(config.data) ? response : response[0];
         }
         catch(err) {
             console.error(err);
@@ -185,7 +192,7 @@ export default class BaseDao {
             payload.updated_at = knex.fn.now();
 
             if(this.tableName !== this.tables.tenants && this.schema.hasOwnProperty('tenant_id')) {
-                payload.tenant_id = knex.tenant_id;
+                payload.tenant_id = knex.userParams.tenant_id;
             }
 
             const qb = knex(this.tableName)
@@ -197,16 +204,44 @@ export default class BaseDao {
                 qb.whereNull('deleted_at')
             }
 
-            // awaiting the reponse will cause errors to be caught
-            // in the catch block.  Otherwise the errors will be returned,
-            // which may lead DB query info
             const response = await qb.update(payload);
-            return response[0];
+
+            this.addVirtuals(response);
+
+            return Array.isArray(config.data) ? response : response[0];
         }
         catch(err) {
             global.logger.error(err);
             throw new Error(GERNERIC_ERROR_MSG);
         }
+    }
+
+
+    /**
+     * Creates or Updates a DB record
+     *
+     * Config: {
+     *   knex: required
+     *   data: required
+     *   where: optional
+     *   columns: optional
+     * }
+     */
+    async upsertOne(config) {
+        assertKnex(config);
+        assertData(config);
+
+        if(config.data.id) {
+            return this.update({
+                ...config,
+                where: {
+                    id: config.data.id,
+                    ...config.where
+                }
+            })
+        }
+
+        return this.create(config);
     }
 
 
@@ -249,6 +284,14 @@ export default class BaseDao {
             global.logger.error(err);
             throw new Error(GERNERIC_ERROR_MSG);
         }
+    }
+
+
+    /*
+    * This method is meant to be extended
+    */
+    addVirtuals(data) {
+        return data;
     }
 
 

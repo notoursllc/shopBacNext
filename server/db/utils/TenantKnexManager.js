@@ -31,11 +31,6 @@ export default class TenantKnexManager {
             this.knexCache.set(tenantId, _knex);
         }
 
-        // since functions are objects we can attach the tenant_id to the knex fn
-        _knex.tenant_id = tenantId;
-        _knex.context.userParams.tenant_id = tenantId;
-        console.log("_knex", _knex)
-
         // If the cache is too big then remove the first item
 		if (this.knexCache.size > MAX_CONNECTION_CACHE) {
             const firstCached = this.knexCache.entries().next();
@@ -86,6 +81,12 @@ export default class TenantKnexManager {
                         done(err, conn);
                     });
                 }
+            },
+
+            // This will make the tenant_id available via knex.userParams.tenant_id
+            // Docs for userParams: https://knexjs.org/guide/#configuration-options
+            userParams: {
+                tenant_id: tenantId
             }
         };
 

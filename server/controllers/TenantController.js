@@ -79,7 +79,7 @@ export default class TenantController extends BaseController {
 
             const Tenant = await this.TenantService.update(
                 request.knex,
-                request.knex.tenant_id,
+                request.knex.userParams.tenant_id,
                 request.payload
             )
 
@@ -103,7 +103,7 @@ export default class TenantController extends BaseController {
 
             const Tenant = await this.TenantService.updateApiKey(
                 request.knex,
-                request.knex.tenant_id
+                request.knex.userParams.tenant_id
             );
 
             global.logger.info('RESPONSE: TenantController.updateApiKeyHandler', {
@@ -126,7 +126,7 @@ export default class TenantController extends BaseController {
 
             const Tenant = await this.TenantService.removeApiKey(
                 request.knex,
-                request.knex.tenant_id
+                request.knex.userParams.tenant_id
             );
 
             global.logger.info(`RESPONSE: TenantController.deleteApiKeyHandler`, {
@@ -151,7 +151,7 @@ export default class TenantController extends BaseController {
                 }
             });
 
-            const Account = await this.TenantService.fetchAccount(request.knex, request.knex.tenant_id);
+            const Account = await this.TenantService.fetchAccount(request.knex, request.knex.userParams.tenant_id);
 
             if(!Account) {
                 return h.apiSuccess();
