@@ -49,7 +49,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return MasterTypeCtrl.createHandler(request, h);
+                    return MasterTypeCtrl.upsertHandler(request, h);
                 }
             }
         },

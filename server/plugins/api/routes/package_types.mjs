@@ -52,7 +52,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return PackageTypeCtrl.createHandler(request, h);
+                    return PackageTypeCtrl.upsertHandler(request, h);
                 }
             }
         },

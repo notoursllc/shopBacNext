@@ -206,4 +206,12 @@ export default class ProductVariantService extends BaseService {
         return schema;
     }
 
+
+    getValidationSchemaForDelete() {
+        return {
+            ...this.getIdValidationSchema(),
+            media_id: Joi.string().uuid().required()
+        }
+    }
+
 }

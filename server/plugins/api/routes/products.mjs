@@ -1,9 +1,7 @@
 import Joi from 'joi';
 import ProductController from '../../../controllers/product/ProductController.js';
-import ProductVariantController from '../../../controllers/product/ProductVariantController.js';
 
 const ProductCtrl = new ProductController();
-const ProductVariantCtrl = new ProductVariantController();
 
 const payloadMaxBytes = process.env.ROUTE_PAYLOAD_MAXBYTES || 10485760; // 10MB (1048576 (1 MB) is the default)
 const productUpsertMaxBytes = 1000000000; // 1 gb
@@ -112,41 +110,6 @@ export default (server) => {
                     return ProductCtrl.deleteHandler(request, h);
                 }
             }
-        },
-
-        /******************************
-         * Product variants
-         ******************************/
-        {
-            method: 'DELETE',
-            path: '/product/variant',
-            options: {
-                description: 'Deletes a product variant',
-                validate: {
-                    payload: Joi.object({
-                        ...ProductVariantCtrl.service.getIdValidationSchema()
-                    })
-                },
-                handler: (request, h) => {
-                    return ProductVariantCtrl.deleteHandler(request, h);
-                }
-            }
-        },
-        {
-            method: 'DELETE',
-            path: '/product/variant/image',
-            options: {
-                description: 'Deletes a product variant image',
-                validate: {
-                    payload: Joi.object({
-                        ...ProductVariantCtrl.service.getIdValidationSchema(),
-                        media_id: Joi.string().uuid().required(),
-                    })
-                },
-                handler: (request, h) => {
-                    return ProductVariantCtrl.deleteImageHandler(request, h);
-                }
-            }
-        },
+        }
     ]);
 }

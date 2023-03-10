@@ -10,33 +10,6 @@ export default class TenantMemberController extends BaseController {
     }
 
 
-    async createHandler(request, h) {
-        try {
-            global.logger.info('REQUEST: TenantMemberController.createHandler', {
-                meta: request.payload
-            });
-
-            const response = await this.service.dao.create({
-                knex: request.knex,
-                data: request.payload
-            });
-
-            global.logger.info('RESPONSE: TenantMemberController.createHandler', {
-                meta: {
-                    member: response
-                }
-            });
-
-            return h.apiSuccess(response);
-        }
-        catch(err) {
-            global.logger.error(err);
-            global.bugsnag(err);
-            throw Boom.badRequest(err);
-        }
-    }
-
-
     async loginHandler(request, h) {
         global.logger.info('REQUEST: TenantMemberController.loginHandler', {
             meta: {

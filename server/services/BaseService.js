@@ -29,6 +29,16 @@ export default class BaseService {
     }
 
 
+    getValidationSchemaForSearch() {
+        const schemaCopy = {
+            ...this.dao.schema,
+            ...this.getValidationSchemaForPagination()
+        };
+        delete schemaCopy.deleted_at;
+        return schemaCopy;
+    }
+
+
     getIdValidationSchema() {
         return {
             id: Joi.string().uuid().required()

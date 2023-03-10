@@ -13,6 +13,20 @@ export default class BaseController {
     }
 
 
+    async throwIfNotFound(knex, id) {
+        const Model = await this.service.dao.fetchOne({
+            knex: knex,
+            where: { id }
+        });
+
+        if(!Model) {
+            throw Boom.notFound();
+        }
+
+        return Model;
+    }
+
+
     async getByIdHandler(request, h) {
         try {
             global.logger.info(`REQUEST: ${this.getControllerName()}.getOneHandler`, {
@@ -40,18 +54,22 @@ export default class BaseController {
     }
 
 
-    async createHandler(request, h) {
+    async upsertHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getControllerName()}.createHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.upsertHandler`, {
                 meta: request.payload
             });
 
-            const response = await this.service.dao.create({
+            if(request.payload.id) {
+                await this.throwIfNotFound(request.knex, request.payload.id);
+            }
+
+            const response = await this.service.dao.upsertOne({
                 knex: request.knex,
                 data: request.payload
             });
 
-            global.logger.info(`RESPONSE: ${this.getControllerName()}.createHandler`, {
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.upsertHandler`, {
                 meta: response
             });
 
@@ -126,10 +144,12 @@ export default class BaseController {
                 meta: request.payload
             });
 
-            const response = await this.service.dao.del(
-                request.knex,
-                { id: request.payload.id }
-            );
+            await this.throwIfNotFound(request.knex, request.payload.id);
+
+            const response = await this.service.dao.del({
+                knex: request.knex,
+                where: { id: request.payload.id }
+            });
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.deleteHandler`, {
                 meta: response

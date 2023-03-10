@@ -15,10 +15,12 @@ export default class ProductVariantController extends BaseController {
                 meta: request.payload
             });
 
+            await this.throwIfNotFound(request.knex, request.payload.id);
+
             const response = await this.service.del(request.knex, request.payload.id);
 
             global.logger.info('RESPONSE: ProductVariantController.deleteHandler', {
-                meta: response
+                meta: response[1]
             });
 
             return h.apiSuccess(request.payload.id);
@@ -36,6 +38,8 @@ export default class ProductVariantController extends BaseController {
             global.logger.info(`REQUEST: ProductVariantController.deleteImageHandler`, {
                 meta: request.payload
             });
+
+            await this.throwIfNotFound(request.knex, request.payload.id);
 
             const response = await this.service.deleteImage(
                 request.knex,

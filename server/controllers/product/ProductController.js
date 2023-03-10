@@ -45,13 +45,17 @@ export default class ProductController extends BaseController {
                 }
             });
 
-            const product = await this.service.getProduct(request.knex, request.query.id);
+            const Product = await this.service.getProduct(request.knex, request.query.id);
+
+            if(!Product) {
+                throw Boom.notFound();
+            }
 
             global.logger.info('RESPONSE: ProductController.getProductHandler', {
-                meta: product
+                meta: Product
             });
 
-            return h.apiSuccess(product);
+            return h.apiSuccess(Product);
         }
         catch(err) {
             global.logger.error(err);
@@ -109,14 +113,7 @@ export default class ProductController extends BaseController {
                 meta: request.payload
             });
 
-            const Product = await this.service.dao.fetchOne({
-                knex: request.knex,
-                where: { id: request.payload.id }
-            });
-
-            if(!Product) {
-                throw Boom.badRequest('Unable to find product.');
-            }
+            await this.throwIfNotFound(request.knex, request.payload.id)
 
             const response = await this.service.del(request.knex, request.payload.id);
 

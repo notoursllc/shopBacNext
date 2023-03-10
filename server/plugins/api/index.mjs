@@ -11,6 +11,8 @@ import masterTypeRoutes from './routes/master_types.mjs';
 import mediaRoutes from './routes/media.mjs';
 import packageTypeRoutes from './routes/package_types.mjs';
 import productRoutes from './routes/products.mjs';
+import productAccentMessageRoutes from './routes/product_accent_messages.mjs';
+import productVariantRoutes from './routes/product_variants.mjs';
 import tenantRoutes from './routes/tenant.mjs';
 
 export default {
@@ -39,6 +41,8 @@ export default {
                     mediaRoutes(server);
                     packageTypeRoutes(server);
                     productRoutes(server);
+                    productAccentMessageRoutes(server);
+                    productVariantRoutes(server);
                     tenantRoutes(server);
                 }
             );
