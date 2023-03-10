@@ -1,85 +1,85 @@
 import Joi from 'joi';
-import ProductAccentMessageController from '../../../controllers/product/ProductAccentMessageController.js';
+import ProductColorSwatchController from '../../../controllers/product/ProductColorSwatchController.js';
 
-const ProductAccentMessageCtrl = new ProductAccentMessageController();
+const ProductColorSwatchCtrl = new ProductColorSwatchController();
 
 export default (server) => {
     server.route([
         {
             method: 'GET',
-            path: '/product/accent_messages',
+            path: '/product/color_swatches',
             options: {
-                description: 'Search product accent messages',
+                description: 'Gets a list of product color swatches',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getValidationSchemaForSearch()
+                        ...ProductColorSwatchCtrl.service.getValidationSchemaForSearch()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.searchHandler(request, h);
+                    return ProductColorSwatchCtrl.searchHandler(request, h);
                 }
             }
         },
         {
             method: 'GET',
-            path: '/product/accent_message',
+            path: '/product/color_swatch',
             options: {
                 description: 'Gets a product color swatch by ID',
                 validate: {
                     query: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getIdValidationSchema()
+                        ...ProductColorSwatchCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.getByIdHandler(request, h);
+                    return ProductColorSwatchCtrl.getByIdHandler(request, h);
                 }
             }
         },
         {
             method: 'POST',
-            path: '/product/accent_message',
+            path: '/product/color_swatch',
             options: {
-                description: 'Adds a new product accent message',
+                description: 'Adds a new product color swatch',
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getValidationSchemaForAdd()
+                        ...ProductColorSwatchCtrl.service.getValidationSchemaForAdd()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.upsertHandler(request, h);
+                    return ProductColorSwatchCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'PUT',
-            path: '/product/accent_message',
+            path: '/product/color_swatch',
             options: {
-                description: 'Updates a product accent message',
+                description: 'Updates a product color swatch',
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getValidationSchemaForUpdate()
+                        ...ProductColorSwatchCtrl.service.getValidationSchemaForUpdate()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.upsertHandler(request, h);
+                    return ProductColorSwatchCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'DELETE',
-            path: '/product/accent_message',
+            path: '/product/color_swatch',
             options: {
-                description: 'Deletes a product accent message',
+                description: 'Deletes a product color swatch',
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getIdValidationSchema()
+                        ...ProductColorSwatchCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.deleteHandler(request, h);
+                    return ProductColorSwatchCtrl.deleteHandler(request, h);
                 }
             }
         }

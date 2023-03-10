@@ -12,6 +12,7 @@ import mediaRoutes from './routes/media.mjs';
 import packageTypeRoutes from './routes/package_types.mjs';
 import productRoutes from './routes/products.mjs';
 import productAccentMessageRoutes from './routes/product_accent_messages.mjs';
+import productColorSwatchRoutes from './routes/product_color_swatches.mjs';
 import productVariantRoutes from './routes/product_variants.mjs';
 import tenantRoutes from './routes/tenant.mjs';
 
@@ -42,6 +43,7 @@ export default {
                     packageTypeRoutes(server);
                     productRoutes(server);
                     productAccentMessageRoutes(server);
+                    productColorSwatchRoutes(server);
                     productVariantRoutes(server);
                     tenantRoutes(server);
                 }
