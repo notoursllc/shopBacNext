@@ -73,6 +73,53 @@ export default class ProductVariantService extends BaseService {
     }
 
 
+    async del(knex, id) {
+        global.logger.info('REQUEST: ProductVariantService.del', {
+            meta: { id }
+        });
+
+        return Promise.all([
+            this.ProductVariantSkuService.deleteForVariant(knex, id),
+            this.dao.del({
+                knex: knex,
+                where: { id: id }
+            })
+        ]);
+    }
+
+
+    /**
+     * Soft deletes a ProductVariant
+     * Note that Product Variants are soft-deleted in order to maintain reporting
+     * history for old Carts.
+     * Images are not physically deleted either
+     *
+     * @param {*} knex
+     * @param {*} product_id
+     */
+    async deleteForProduct(knex, product_id) {
+        global.logger.info('REQUEST: ProductVariantService.deleteForProduct', {
+            meta: { product_id }
+        });
+
+        // await this.addRelationToProducts(knex, Product);
+        const ProductVariants = await this.dao.search({
+            knex: knex,
+            where: { product_id: product_id },
+            paginate: false
+        });
+
+        const promises = [];
+        makeArray(ProductVariants).forEach((Variant) => {
+            promises.push(
+                this.del(knex, Variant.id)
+            )
+        });
+
+        return Promise.all(promises);
+    }
+
+
     /**
      * Adds variant relation to a list of products
      *
@@ -89,11 +136,11 @@ export default class ProductVariantService extends BaseService {
             'variants'
         );
 
-        await this.ProductVariantSkuService.addSkuRelationsToVariants(knex, products);
-
-        makeArray(products).forEach((product) => {
-            this.dao.addVirtuals(product.variants);
-        })
+        const prodArray = makeArray(products);
+        for(let i=0, l=prodArray.length; i<l; i++) {
+            await this.ProductVariantSkuService.addSkuRelationsToVariants(knex, prodArray[i].variants);
+            this.dao.addVirtuals(prodArray[i].variants);
+        }
 
         return products;
     }

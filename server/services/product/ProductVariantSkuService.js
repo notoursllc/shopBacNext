@@ -130,26 +130,90 @@ export default class ProductVariantSkuService extends BaseService {
 
 
     /**
+     * Soft-delete a SKU
+     * Note that SKUs are soft-deleted in order to maintain reporting
+     * history for old Carts
+     *
+     * @param {*} knex
+     * @param {*} id
+     */
+    async del(knex, id) {
+        global.logger.info('REQUEST: ProductVariantSkuService.del', {
+            meta: { id }
+        });
+
+        const Sku = await this.dao.fetchOne({
+            knex: knex,
+            where: { id: id }
+        });
+
+        if(Sku) {
+            const promises = [];
+
+            if(Sku.stripe_price_id) {
+                promises.push(
+                    this.StripeService.archivePrice(knex, Sku.stripe_price_id)
+                );
+            }
+
+            if(Sku.stripe_product_id) {
+                promises.push(
+                    this.StripeService.archiveProduct(knex, Sku.stripe_product_id)
+                );
+            }
+
+            promises.push(
+                this.dao.del({
+                    knex: knex,
+                    where: { id: id }
+                })
+            );
+
+            return Promise.all(promises);
+        }
+    }
+
+
+    async deleteForVariant(knex, product_variant_id) {
+        global.logger.info('REQUEST: ProductVariantSkuService.deleteForVariant', {
+            meta: { product_variant_id }
+        });
+
+        const skus = await this.dao.search({
+            knex: knex,
+            where: { product_variant_id: product_variant_id },
+            paginate: false
+        });
+
+        const promises = [];
+
+        makeArray(skus).forEach((sku) => {
+            promises.push(
+                this.del(knex, sku.id)
+            )
+        });
+
+        return Promise.all(promises);
+    }
+
+
+    /**
      * Adds variant relation to a list of products
      *
      * @param {*} knex
      * @param {*} products
      * @returns []
      */
-    async addSkuRelationsToVariants(knex, products) {
-        const productVariantMap = {};
+    async addSkuRelationsToVariants(knex, variants) {
+        const variantMap = {};
 
-        makeArray(products).forEach(prod => {
-            if(Array.isArray(prod.variants)) {
-                prod.variants.forEach(v => {
-                    if(v.id) {
-                        productVariantMap[v.id] = v;
-                    }
-                });
+        makeArray(variants).forEach((variant) => {
+            if(variant.id) {
+                variantMap[variant.id] = variant;
             }
         });
 
-        const variantIds = Object.keys(productVariantMap);
+        const variantIds = Object.keys(variantMap);
 
         if(variantIds.length) {
             // Get all skus for the collection of variants
@@ -159,19 +223,15 @@ export default class ProductVariantSkuService extends BaseService {
                 .whereIn('product_variant_id', variantIds)
                 .whereNull('deleted_at');
 
+            this.dao.addVirtuals(skus);
+
             skus.forEach(sku => {
-                if(!Array.isArray(productVariantMap[sku.product_variant_id].skus)) {
-                    productVariantMap[sku.product_variant_id].skus = [];
+                if(!Array.isArray(variantMap[sku.product_variant_id].skus)) {
+                    variantMap[sku.product_variant_id].skus = [];
                 }
-                productVariantMap[sku.product_variant_id].skus.push(sku);
+                variantMap[sku.product_variant_id].skus.push(sku);
             });
         }
-
-        makeArray(products).forEach((product) => {
-            makeArray(product.variants).forEach((variant) => {
-                this.dao.addVirtuals(variant.skus);
-            });
-        });
     }
 
 

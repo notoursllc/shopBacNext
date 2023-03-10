@@ -53,7 +53,17 @@ export default class BaseDao {
     }
 
 
-    // async search(knex, query, columns) {
+    /**
+    * Searches DB records
+    *
+    * Config: {
+    *   knex: required
+    *   where: optional
+    *   data: N/A
+    *   columns: optional
+    *   paginate: optional (default true)
+    * }
+    */
     async search(config) {
         assertKnex(config);
 
@@ -74,8 +84,15 @@ export default class BaseDao {
                 qb.whereNull('deleted_at')
             }
 
-            const response = await this.paginate(config.where, qb);
-            this.addVirtuals(response.data);
+            let response;
+            if(config.paginate !== false) {
+                response = await this.paginate(config.where, qb);
+                this.addVirtuals(response.data);
+            }
+            else {
+                response = await qb;
+                this.addVirtuals(response);
+            }
 
             return response;
         }

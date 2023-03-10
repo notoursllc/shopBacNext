@@ -90,7 +90,8 @@ export default class ProductDao extends BaseDao {
 
             // TIMESTAMPS
             created_at: Joi.date(),
-            updated_at: Joi.date()
+            updated_at: Joi.date(),
+            deleted_at: Joi.date(),
         }
     }
 

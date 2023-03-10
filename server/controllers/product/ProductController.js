@@ -102,4 +102,35 @@ export default class ProductController extends BaseController {
         }
     }
 
+
+    async deleteHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: ProductController.deleteHandler', {
+                meta: request.payload
+            });
+
+            const Product = await this.service.dao.fetchOne({
+                knex: request.knex,
+                where: { id: request.payload.id }
+            });
+
+            if(!Product) {
+                throw Boom.badRequest('Unable to find product.');
+            }
+
+            const response = await this.service.del(request.knex, request.payload.id);
+
+            global.logger.info('RESPONSE: ProductController.deleteHandler', {
+                meta: response
+            });
+
+            return h.apiSuccess(response);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
 }

@@ -59,6 +59,23 @@ export default class ProductService extends BaseService {
     }
 
 
+    async del(knex, id) {
+        global.logger.info('REQUEST: ProductService.del', {
+            meta: { id }
+        });
+
+        return knex.transaction(async trx => {
+            return Promise.all([
+                this.ProductVariantService.deleteForProduct(trx, id),
+                this.dao.del({
+                    knex: trx,
+                    where: { id: id }
+                })
+            ]);
+        });
+    }
+
+
     async getProduct(knex, id) {
         return knex.client.transaction(async trx => {
             const product = await this.dao.fetchOne({

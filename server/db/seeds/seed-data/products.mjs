@@ -162,8 +162,6 @@ async function seed(knex) {
             let products = await Promise.all(promises);
             products = products.map(arr => arr[0])
 
-            console.log("PRODUCTS", products);
-
             const productVariants = await seedProductVariants(products);
             console.log("productVariants", productVariants)
 
