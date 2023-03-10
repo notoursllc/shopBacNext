@@ -1,97 +1,97 @@
 import Joi from 'joi';
-import ProductColorSwatchController from '../../../controllers/product/ProductColorSwatchController.js';
+import ProductCollectionController from '../../../controllers/product/ProductCollectionController.js';
 
-const ProductColorSwatchCtrl = new ProductColorSwatchController();
+const ProductCollectionCtrl = new ProductCollectionController();
 
 export default (server) => {
     server.route([
         {
             method: 'GET',
-            path: '/product/color_swatches',
+            path: '/product/collections',
             options: {
-                description: 'Gets a list of product color swatches',
+                description: 'Gets a list of product collections',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getValidationSchemaForSearch()
+                        ...ProductCollectionCtrl.service.getValidationSchemaForSearch()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductColorSwatchCtrl.searchHandler(request, h);
+                    return ProductCollectionCtrl.searchHandler(request, h);
                 }
             }
         },
         {
             method: 'GET',
-            path: '/product/color_swatch',
+            path: '/product/collection',
             options: {
-                description: 'Gets a product color swatch by ID',
+                description: 'Gets a product collection by ID',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getIdValidationSchema()
+                        ...ProductCollectionCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductColorSwatchCtrl.getByIdHandler(request, h);
+                    return ProductCollectionCtrl.getByIdHandler(request, h);
                 }
             }
         },
         {
             method: 'POST',
-            path: '/product/color_swatch',
+            path: '/product/collection',
             options: {
-                description: 'Adds a new product color swatch',
+                description: 'Adds a new product collection',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getValidationSchemaForAdd()
+                        ...ProductCollectionCtrl.service.getValidationSchemaForAdd()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductColorSwatchCtrl.upsertHandler(request, h);
+                    return ProductCollectionCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'PUT',
-            path: '/product/color_swatch',
+            path: '/product/collection',
             options: {
-                description: 'Updates a product color swatch',
+                description: 'Updates a product collection',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getValidationSchemaForUpdate()
+                        ...ProductCollectionCtrl.service.getValidationSchemaForUpdate()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductColorSwatchCtrl.upsertHandler(request, h);
+                    return ProductCollectionCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'DELETE',
-            path: '/product/color_swatch',
+            path: '/product/collection',
             options: {
-                description: 'Deletes a product color swatch',
+                description: 'Deletes a product collection',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getIdValidationSchema()
+                        ...ProductCollectionCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductColorSwatchCtrl.deleteHandler(request, h);
+                    return ProductCollectionCtrl.deleteHandler(request, h);
                 }
             }
         }
