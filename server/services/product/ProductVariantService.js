@@ -6,6 +6,7 @@ import BaseService from '../BaseService.js';
 import ProductVariantDao from '../../db/dao/product/ProductVariantDao.js';
 import ProductVariantSkuService from './ProductVariantSkuService.js'
 import { makeArray } from '../../utils/index.js';
+import BunnyAPI from '../BunnyAPI.js';
 
 export default class ProductVariantService extends BaseService {
 
@@ -117,6 +118,52 @@ export default class ProductVariantService extends BaseService {
         });
 
         return Promise.all(promises);
+    }
+
+
+    async deleteImage(knex, variantId, mediaId) {
+        global.logger.info('REQUEST: ProductVariantService.deleteImage', {
+            meta: { variantId, mediaId }
+        });
+
+        const Variant = await this.dao.fetchOne({
+            knex: knex,
+            where: { id: variantId }
+        });
+
+        if(Variant) {
+            if(Array.isArray(Variant.images)) {
+                let matchedIndex = null;
+
+                Variant.images.forEach((obj, index) => {
+                    if(obj.id === mediaId) {
+                        matchedIndex = index;
+                    }
+                })
+
+                if(matchedIndex !== null) {
+                    // Delete the image file.
+                    // Any errors here should only be logged
+                    // so they don't affect the outcome of this operation
+                    try {
+                        BunnyAPI.storage.del(Variant.images[matchedIndex].url);
+                    }
+                    catch(err) {
+                        global.logger.error(err);
+                        global.bugsnag(err);
+                    }
+
+                    // Take the matched index out of the images array
+                    Variant.images.splice(matchedIndex, 1);
+
+                    return this.dao.update({
+                        knex: knex,
+                        where: { id: variantId },
+                        data: { images: Variant.images }
+                    });
+                }
+            }
+        }
     }
 
 
