@@ -14,6 +14,7 @@ import productRoutes from './routes/products.mjs';
 import productAccentMessageRoutes from './routes/product_accent_messages.mjs';
 import productColorSwatchRoutes from './routes/product_color_swatches.mjs';
 import productVariantRoutes from './routes/product_variants.mjs';
+import productVariantSkuRoutes from './routes/product_variant_skus.mjs';
 import tenantRoutes from './routes/tenant.mjs';
 
 export default {
@@ -45,6 +46,7 @@ export default {
                     productAccentMessageRoutes(server);
                     productColorSwatchRoutes(server);
                     productVariantRoutes(server);
+                    productVariantSkuRoutes(server);
                     tenantRoutes(server);
                 }
             );
