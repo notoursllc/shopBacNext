@@ -1,97 +1,97 @@
 import Joi from 'joi';
-import ProductAccentMessageController from '../../../controllers/product/ProductAccentMessageController.js';
+import ProductDataTableController from '../../../controllers/product/ProductDataTableController.js';
 
-const ProductAccentMessageCtrl = new ProductAccentMessageController();
+const ProductDataTableCtrl = new ProductDataTableController();
 
 export default (server) => {
     server.route([
         {
             method: 'GET',
-            path: '/product/accent_messages',
+            path: '/product/data_tables',
             options: {
-                description: 'Search product accent messages',
+                description: 'Gets a list of product data tables',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getValidationSchemaForSearch()
+                        ...ProductDataTableCtrl.service.getValidationSchemaForSearch()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.searchHandler(request, h);
+                    return ProductDataTableCtrl.searchHandler(request, h);
                 }
             }
         },
         {
             method: 'GET',
-            path: '/product/accent_message',
+            path: '/product/data_table',
             options: {
-                description: 'Gets a product color swatch by ID',
+                description: 'Gets a product data table by ID',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getIdValidationSchema()
+                        ...ProductDataTableCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.getByIdHandler(request, h);
+                    return ProductDataTableCtrl.getByIdHandler(request, h);
                 }
             }
         },
         {
             method: 'POST',
-            path: '/product/accent_message',
+            path: '/product/data_table',
             options: {
-                description: 'Adds a new product accent message',
+                description: 'Adds a new product data table',
                 auth: {
                     strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getValidationSchemaForAdd()
+                        ...ProductDataTableCtrl.service.getValidationSchemaForAdd()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.upsertHandler(request, h);
+                    return ProductDataTableCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'PUT',
-            path: '/product/accent_message',
+            path: '/product/data_table',
             options: {
-                description: 'Updates a product accent message',
+                description: 'Updates a product data table',
                 auth: {
                     strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getValidationSchemaForUpdate()
+                        ...ProductDataTableCtrl.service.getValidationSchemaForUpdate()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.upsertHandler(request, h);
+                    return ProductDataTableCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'DELETE',
-            path: '/product/accent_message',
+            path: '/product/data_table',
             options: {
-                description: 'Deletes a product accent message',
+                description: 'Deletes a product data table',
                 auth: {
                     strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getIdValidationSchema()
+                        ...ProductDataTableCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductAccentMessageCtrl.deleteHandler(request, h);
+                    return ProductDataTableCtrl.deleteHandler(request, h);
                 }
             }
         }

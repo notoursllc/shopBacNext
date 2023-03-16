@@ -10,6 +10,9 @@ export default (server) => {
             path: '/product/variant/sku',
             options: {
                 description: 'Deletes a SKU',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...ProductVariantSkuCtrl.service.getIdValidationSchema()

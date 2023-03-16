@@ -162,8 +162,6 @@ export default (server) => {
                     return TenantCtrl.deleteApiKeyHandler(request, h);
                 }
             }
-        },
-
-
+        }
     ]);
 }

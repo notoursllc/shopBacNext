@@ -28,6 +28,9 @@ export default (server) => {
             path: '/master_type',
             options: {
                 description: 'Gets an master type by ID',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
                 validate: {
                     query: Joi.object({
                         ...MasterTypeCtrl.service.getIdValidationSchema()
@@ -43,6 +46,9 @@ export default (server) => {
             path: '/master_type',
             options: {
                 description: 'Adds a new master type',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...MasterTypeCtrl.service.getValidationSchemaForAdd(),
@@ -58,6 +64,9 @@ export default (server) => {
             path: '/master_type',
             options: {
                 description: 'Updates master type',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...MasterTypeCtrl.service.getValidationSchemaForUpdate()
@@ -73,6 +82,9 @@ export default (server) => {
             path: '/master_types/ordinal',
             options: {
                 description: 'Bulk update master type ordinals',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...MasterTypeCtrl.service.getValidationSchemaForUpdateOrdinals()
@@ -88,6 +100,9 @@ export default (server) => {
             path: '/master_type',
             options: {
                 description: 'Deletes a master type',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...MasterTypeCtrl.service.getIdValidationSchema()

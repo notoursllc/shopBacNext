@@ -7,7 +7,7 @@ export default class ProductArtistDao extends BaseDao {
     constructor() {
         super();
         this.tableName = this.tables.product_artists;
-        this.hidden = ['tenant_id'];
+        this.hidden = ['tenant_id', 'deleted_at'];
         this.schema = {
             id: Joi.string().uuid(),
             tenant_id: Joi.string().uuid(),

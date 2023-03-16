@@ -1,36 +1,52 @@
 import Joi from 'joi';
-import MediaController from '../../../controllers/MediaController.js';
+import ProductArtistController from '../../../controllers/product/ProductArtistController.js';
 
-const MediaCtrl = new MediaController();
+const ProductArtistCtrl = new ProductArtistController();
 const payloadMaxBytes = process.env.ROUTE_PAYLOAD_MAXBYTES || 10485760; // 10MB (1048576 (1 MB) is the default)
-const videoPayloadMaxBytes = process.env.VIDEO_PAYLOAD_MAXBYTES || 1000000000; // 1 gb
-
 
 export default (server) => {
     server.route([
         {
             method: 'GET',
-            path: '/media',
+            path: `/product/artists`,
             options: {
-                description: 'Finds a media object by ID',
+                description: 'Gets a list of product artist',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },
                 validate: {
                     query: Joi.object({
-                        ...MediaCtrl.service.getIdValidationSchema()
+                        ...ProductArtistCtrl.service.getValidationSchemaForSearch()
                     })
                 },
                 handler: (request, h) => {
-                    return MediaCtrl.getByIdHandler(request, h);
+                    return ProductArtistCtrl.searchHandler(request, h);
+                }
+            }
+        },
+        {
+            method: 'GET',
+            path: '/product/artist',
+            options: {
+                description: 'Gets a product artist by ID',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                validate: {
+                    query: Joi.object({
+                        ...ProductArtistCtrl.service.getIdValidationSchema()
+                    })
+                },
+                handler: (request, h) => {
+                    return ProductArtistCtrl.getByIdHandler(request, h);
                 }
             }
         },
         {
             method: 'POST',
-            path: '/media/image',
+            path: '/product/artist',
             options: {
-                description: 'Adds a new image',
+                description: 'Adds a new product artist',
                 auth: {
                     strategies: ['session']
                 },
@@ -44,39 +60,19 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...MediaCtrl.service.getValidationSchemaForAdd()
+                        ...ProductArtistCtrl.service.getValidationSchemaForAdd()
                     })
                 },
                 handler: (request, h) => {
-                    return MediaCtrl.addImageHandler(request, h);
+                    return ProductArtistCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
-            method: 'DELETE',
-            path: '/media/image',
+            method: 'PUT',
+            path: `/product/artist`,
             options: {
-                description: 'Deletes an image',
-                auth: {
-                    strategies: ['session']
-                },
-                validate: {
-                    payload: Joi.object({
-                        ...MediaCtrl.service.getIdValidationSchema()
-                    })
-                },
-                handler: (request, h) => {
-                    return MediaCtrl.deleteImageHandler(request, h);
-                }
-            }
-        },
-
-        // VIDEO
-        {
-            method: 'POST',
-            path: '/media/video',
-            options: {
-                description: 'Adds a new video',
+                description: 'Updates a product artist',
                 auth: {
                     strategies: ['session']
                 },
@@ -85,34 +81,34 @@ export default (server) => {
                     output: 'file',
                     parse: true,
                     allow: 'multipart/form-data',
-                    maxBytes: videoPayloadMaxBytes,
+                    maxBytes: payloadMaxBytes,
                     multipart: true
                 },
                 validate: {
                     payload: Joi.object({
-                        ...MediaCtrl.service.getValidationSchemaForAdd()
+                        ...ProductArtistCtrl.service.getValidationSchemaForUpdate()
                     })
                 },
                 handler: (request, h) => {
-                    return MediaCtrl.addVideoHandler(request, h);
+                    return ProductArtistCtrl.upsertHandler(request, h);
                 }
             }
         },
         {
             method: 'DELETE',
-            path: '/media/video',
+            path: `/product/artist`,
             options: {
-                description: 'Deletes a new video',
+                description: 'Deletes a product artist',
                 auth: {
                     strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...MediaCtrl.service.getIdValidationSchema()
+                        ...ProductArtistCtrl.service.getIdValidationSchema()
                     })
                 },
                 handler: (request, h) => {
-                    return MediaCtrl.deleteVideoHandler(request, h);
+                    return ProductArtistCtrl.deleteHandler(request, h);
                 }
             }
         }

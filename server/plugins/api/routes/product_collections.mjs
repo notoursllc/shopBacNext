@@ -47,7 +47,7 @@ export default (server) => {
             options: {
                 description: 'Adds a new product collection',
                 auth: {
-                    strategies: ['storeauth', 'session']
+                    strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
@@ -65,7 +65,7 @@ export default (server) => {
             options: {
                 description: 'Updates a product collection',
                 auth: {
-                    strategies: ['storeauth', 'session']
+                    strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({
@@ -83,7 +83,7 @@ export default (server) => {
             options: {
                 description: 'Deletes a product collection',
                 auth: {
-                    strategies: ['storeauth', 'session']
+                    strategies: ['session']
                 },
                 validate: {
                     payload: Joi.object({

@@ -46,6 +46,9 @@ export default (server) => {
             path: '/package_type',
             options: {
                 description: 'Adds a new package type',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...PackageTypeCtrl.service.getValidationSchemaForAdd()
@@ -61,6 +64,9 @@ export default (server) => {
             path: '/package_type',
             options: {
                 description: 'Updates a package type',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...PackageTypeCtrl.service.getIdValidationSchema(),
@@ -77,6 +83,9 @@ export default (server) => {
             path: '/package_types/ordinal',
             options: {
                 description: 'Bulk update package type ordinals',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...PackageTypeCtrl.service.getUpdateOrdinalsValidationSchema()
@@ -92,6 +101,9 @@ export default (server) => {
             path: '/package_type',
             options: {
                 description: 'Deletes a package type by ID',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...PackageTypeCtrl.service.getIdValidationSchema()
@@ -101,7 +113,6 @@ export default (server) => {
                     return PackageTypeCtrl.deleteHandler(request, h);
                 }
             }
-        },
-
+        }
     ]);
 }

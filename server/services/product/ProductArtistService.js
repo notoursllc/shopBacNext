@@ -1,11 +1,34 @@
 
+import Joi from 'joi';
 import BaseService from '../BaseService.js';
 import ProductArtistDao from '../../db/dao/product/ProductArtistDao.js';
+import BunnyAPI from '../BunnyAPI.js';
 
 export default class ProductService extends BaseService {
 
     constructor() {
         super(new ProductArtistDao());
+    }
+
+
+    uploadImage(file) {
+        return BunnyAPI.storage.imageUpload(`${Date.now()}-${file.filename}`, file);
+    }
+
+
+    async upsertArtist(knex, data) {
+        const payload = { ...data };
+
+        if(payload.file) {
+            payload.image = await this.uploadImage(payload.file);
+        }
+
+        delete payload.file;
+
+        return this.dao.upsertOne({
+            knex: knex,
+            data: payload
+        });
     }
 
 
@@ -26,5 +49,22 @@ export default class ProductService extends BaseService {
             true
         );
     }
+
+
+    getValidationSchemaForAdd() {
+        const schemaCopy = super.getValidationSchemaForAdd();
+        schemaCopy.file = Joi.object();
+
+        return schemaCopy;
+    }
+
+
+    getValidationSchemaForUpdate() {
+        const schemaCopy = super.getValidationSchemaForUpdate();
+        schemaCopy.file = Joi.object();
+
+        return schemaCopy;
+    }
+
 
 }

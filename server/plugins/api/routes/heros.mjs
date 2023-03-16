@@ -54,6 +54,9 @@ export default (server) => {
             path: '/hero',
             options: {
                 description: 'Adds a new Hero',
+                auth: {
+                    strategies: ['session']
+                },
                 payload: payloadConfig,
                 validate: {
                     payload: Joi.object({
@@ -70,6 +73,9 @@ export default (server) => {
             path: '/hero',
             options: {
                 description: 'Updates a Hero',
+                auth: {
+                    strategies: ['session']
+                },
                 payload: payloadConfig,
                 validate: {
                     payload: Joi.object({
@@ -86,6 +92,9 @@ export default (server) => {
             path: '/heros/ordinal',
             options: {
                 description: 'Updates Hero ordinals',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...HeroCtrl.service.getValidationSchemaForUpdateOrdinals()
@@ -101,6 +110,9 @@ export default (server) => {
             path: '/hero',
             options: {
                 description: 'Deletes a Hero',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...HeroCtrl.service.getIdValidationSchema()

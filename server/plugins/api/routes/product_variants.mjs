@@ -10,6 +10,9 @@ export default (server) => {
             path: '/product/variant',
             options: {
                 description: 'Deletes a product variant',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...ProductVariantCtrl.service.getIdValidationSchema()
@@ -25,6 +28,9 @@ export default (server) => {
             path: '/product/variant/image',
             options: {
                 description: 'Deletes a product variant image',
+                auth: {
+                    strategies: ['session']
+                },
                 validate: {
                     payload: Joi.object({
                         ...ProductVariantCtrl.service.getValidationSchemaForDelete()
