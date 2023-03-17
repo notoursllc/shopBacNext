@@ -14,11 +14,12 @@ export default class ProductService extends BaseService {
     }
 
 
-    async getProducts(knex, query) {
+    async getProducts(knex, query, paginate) {
         return knex.client.transaction(async trx => {
             const products = await this.dao.search({
                 knex: trx,
-                where: query
+                where: query,
+                paginate: paginate
             });
 
             if(products?.data.length) {

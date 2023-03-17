@@ -55,72 +55,13 @@ function getServer() {
                         }
                     },
                     { plugin: './plugins/logger' },
-                    // {
-                    //     plugin: './plugins/bookshelf-orm',
-                    //     options: {
-                    //         knex: {
-                    //             debug: Config.get('/db/debug')
-                    //         }
-                    //     }
-                    // },
-                    // // { plugin: './plugins/auth-scheme-jwt-cookie' },
-                    // {
-                    //     plugin: './plugins/tenants',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
+                    { plugin: './plugins/files' },
                     {
                         plugin: './plugins/api',
                         routes: {
                             prefix: routePrefix
                         }
-                    },
-
-                    // { plugin: './plugins/core' },
-                    // {
-                    //     plugin: './plugins/master-types',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
-                    // {
-                    //     plugin: './plugins/package-types',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
-                    // { plugin: './plugins/products' },
-                    // {
-                    //     plugin: './plugins/media',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
-                    // {
-                    //     plugin: './plugins/cart',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
-                    // {
-                    //     plugin: './plugins/tax-nexus',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
-                    // {
-                    //     plugin: './plugins/heros',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
-                    // {
-                    //     plugin: './plugins/exchange-rates',
-                    //     routes: {
-                    //         prefix: routePrefix
-                    //     }
-                    // },
+                    }
                 ]
                 // options: {
                 //     once: false

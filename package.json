@@ -28,6 +28,7 @@
     "confidence": "5.0.1",
     "dotenv": "16.0.3",
     "fs-extra": "11.1.0",
+    "generate-robotstxt": "8.0.3",
     "handlebars": "4.7.7",
     "hapi-rate-limit": "6.0.0",
     "joi": "17.7.1",
@@ -40,6 +41,7 @@
     "mjml": "4.13.0",
     "pg": "8.9.0",
     "postmark": "3.0.15",
+    "sitemap": "7.1.1",
     "stripe": "11.13.0",
     "uuid": "9.0.0",
     "winston": "3.8.2"

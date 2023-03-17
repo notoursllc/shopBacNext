@@ -125,7 +125,7 @@ export default class BaseDao {
                 .from(this.tableName);
 
             if(config.where) {
-                qb.where(config.where);
+                this.buildFilters(config.where, qb);
             }
 
             if(!config.where?.hasOwnProperty('deleted_at') && this.isSoftDelete()) {
@@ -343,6 +343,12 @@ export default class BaseDao {
      * nin: Isn't included in an array of values
      * like: %like%
      * null: Is null/Is not null
+     *
+     * @example query values:
+     * { 'id': { 'ne': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' } }
+     * { 'id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' } => same as 'eq'
+     * { 'sub_type': { 'bitwise_and_gt': {'left':2, 'right':0} } }
+     *
      *
      * https://knexjs.org/#Builder-wheres
      */

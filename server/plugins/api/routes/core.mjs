@@ -41,19 +41,8 @@ export default (server) => {
                 auth: false,
                 description: 'Simple health check',
                 handler: (request, h) => {
-                    // return CoreCtrl.healthzHandler(h);
+                    return CoreCtrl.healthzHandler(request, h);
                 }
-            }
-        },
-        {
-            method: 'GET',
-            path: '/robots.txt', // NOTE: no routePrefix on this one
-            options: {
-                auth: false,
-                description: 'For generating robots.txt',
-            },
-            handler: (request, h) => {
-                // return CoreCtrl.robotsHandler(h);
             }
         }
     ]);
