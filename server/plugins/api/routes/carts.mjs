@@ -114,6 +114,6 @@ export default (server) => {
                     return CartCtrl.resendOrderConfirmaionHandler(request, h);
                 }
             }
-        },
+        }
     ]);
 }

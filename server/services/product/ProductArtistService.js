@@ -25,7 +25,10 @@ export default class ProductService extends BaseService {
 
         delete payload.file;
 
-        return this.upsertOne(knex, payload);
+        return this.upsertOne({
+            knex: knex,
+            data: payload
+        });
     }
 
 

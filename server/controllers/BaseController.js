@@ -118,7 +118,10 @@ export default class BaseController {
                 }
             });
 
-            const response = await this.service.search(request.knex, request.query)
+            const response = await this.service.search({
+                knex: request.knex,
+                where: request.query
+            });
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.searchHandler`, {
                 meta: {

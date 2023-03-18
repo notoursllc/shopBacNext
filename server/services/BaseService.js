@@ -39,14 +39,11 @@ export default class BaseService {
     }
 
 
-    async upsertOne(knex, data) {
-        const results = await this.dao.upsertOne({
-            knex,
-            data
-        });
+    async upsertOne(config) {
+        const results = await this.dao.upsertOne(config);
 
         if(results) {
-            await this.addRelations(knex, results);
+            await this.addRelations(config.knex, results);
         }
 
         return results;

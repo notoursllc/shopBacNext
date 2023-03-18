@@ -25,7 +25,7 @@ export default class ProductService extends BaseService {
             const variants = cloneDeep(prodData.variants);
             delete prodData.variants;
 
-            const Product = await this.dao.upsertOne({
+            const Product = await this.upsertOne({
                 knex: trx,
                 data: prodData
             });
