@@ -15,7 +15,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductVariantSkuCtrl.service.getIdValidationSchema()
+                        ...ProductVariantSkuCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

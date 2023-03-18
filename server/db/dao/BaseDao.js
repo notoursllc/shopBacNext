@@ -347,6 +347,8 @@ export default class BaseDao {
      * @example query values:
      * { 'id': { 'ne': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' } }
      * { 'id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' } => same as 'eq'
+     * { 'closed_at': { 'null' : false } }  => 'closed_at is not null'
+     * { 'closed_at': { 'null' : true } }  => 'closed_at is null'
      * { 'sub_type': { 'bitwise_and_gt': {'left':2, 'right':0} } }
      *
      *

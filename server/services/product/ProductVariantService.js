@@ -74,18 +74,8 @@ export default class ProductVariantService extends BaseService {
     }
 
 
-    async del(knex, id) {
-        global.logger.info('REQUEST: ProductVariantService.del', {
-            meta: { id }
-        });
-
-        return Promise.all([
-            this.ProductVariantSkuService.deleteForVariant(knex, id),
-            this.dao.del({
-                knex: knex,
-                where: { id: id }
-            })
-        ]);
+    deleteRelations(knex, id) {
+        return this.ProductVariantSkuService.deleteForVariant(knex, id);
     }
 
 
@@ -113,7 +103,10 @@ export default class ProductVariantService extends BaseService {
         const promises = [];
         makeArray(ProductVariants).forEach((Variant) => {
             promises.push(
-                this.del(knex, Variant.id)
+                this.del({
+                    knex: knex,
+                    where: { id: Variant.id }
+                })
             )
         });
 
@@ -126,7 +119,7 @@ export default class ProductVariantService extends BaseService {
             meta: { variantId, mediaId }
         });
 
-        const Variant = await this.dao.fetchOne({
+        const Variant = await this.fetchOne({
             knex: knex,
             where: { id: variantId }
         });
@@ -209,7 +202,7 @@ export default class ProductVariantService extends BaseService {
 
     getValidationSchemaForDelete() {
         return {
-            ...this.getIdValidationSchema(),
+            ...this.getValidationSchemaForId(),
             media_id: Joi.string().uuid().required()
         }
     }

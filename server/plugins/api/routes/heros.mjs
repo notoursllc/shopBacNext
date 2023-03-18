@@ -23,7 +23,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...HeroCtrl.service.getIdValidationSchema()
+                        ...HeroCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -115,7 +115,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...HeroCtrl.service.getIdValidationSchema()
+                        ...HeroCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

@@ -60,7 +60,7 @@ export default class TenantService extends BaseService {
 
 
     async update(knex, id, data) {
-        const Tenant = await this.dao.fetchOne({
+        const Tenant = await this.fetchOne({
             knex: knex,
             where: { id }
         });
@@ -131,7 +131,7 @@ export default class TenantService extends BaseService {
      * @param {*} id
      */
     async fetchAccount(knex, id) {
-        const Tenant = await this.dao.fetchOne({
+        const Tenant = await this.fetchOne({
             knex: knex,
             where: { id }
         });
@@ -187,7 +187,7 @@ export default class TenantService extends BaseService {
             }
 
             const _knex = this.TenantKnexManager.getKnexForTenant(process.env.TENANT_ID_BYPASSRLS);
-            const tenantData = await this.dao.fetchOne({
+            const tenantData = await this.fetchOne({
                 knex: _knex,
                 where: { id: tenant_id, active: true }
             });

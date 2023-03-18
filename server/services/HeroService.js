@@ -16,7 +16,7 @@ export default class HeroService extends BaseService {
 
 
     async deleteHeroImage(knex, id) {
-        const currentHero = await this.dao.fetchOne({
+        const currentHero = await this.fetchOne({
             knex: knex,
             where: { id }
         });
@@ -61,13 +61,8 @@ export default class HeroService extends BaseService {
     }
 
 
-    async deleteHero(knex, id) {
-        await this.deleteHeroImage(knex, id);
-
-        return this.dao.del({
-            knex: knex,
-            where: { id }
-        });
+    deleteRelations(knex, id) {
+        return this.deleteHeroImage(knex, id);
     }
 
 

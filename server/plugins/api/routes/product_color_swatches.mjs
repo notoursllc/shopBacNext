@@ -33,7 +33,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getIdValidationSchema()
+                        ...ProductColorSwatchCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -87,7 +87,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductColorSwatchCtrl.service.getIdValidationSchema()
+                        ...ProductColorSwatchCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

@@ -63,31 +63,4 @@ export default class HeroController extends BaseController {
         }
     }
 
-
-    async deleteHandler(request, h) {
-        try {
-            global.logger.info('REQUEST: HeroController.deleteHandler', {
-                meta: {
-                    payload: request.payload
-                }
-            });
-
-            const Hero = await this.service.deleteHero(
-                request.knex,
-                request.payload.id
-            );
-
-            global.logger.info('RESONSE: HeroController.deleteHandler', {
-                meta: Hero
-            });
-
-            return h.apiSuccess(Hero);
-        }
-        catch(err) {
-            global.logger.error(err);
-            global.bugsnag(err);
-            throw Boom.badRequest(err);
-        }
-    }
-
 }

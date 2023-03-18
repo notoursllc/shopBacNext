@@ -11,7 +11,10 @@ export default class ExchangeRateDao extends BaseDao {
         this.schema = {
             id: Joi.string().uuid().allow(null),
             base: Joi.string(),
-            rates: Joi.alternatives().try(Joi.object(), Joi.allow(null)),
+            rates: Joi.alternatives().try(
+                Joi.object(),
+                Joi.allow(null)
+            ),
             created_at: Joi.date(),
             updated_at: Joi.date()
         }

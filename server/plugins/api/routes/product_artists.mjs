@@ -34,7 +34,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductArtistCtrl.service.getIdValidationSchema()
+                        ...ProductArtistCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -104,7 +104,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductArtistCtrl.service.getIdValidationSchema()
+                        ...ProductArtistCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

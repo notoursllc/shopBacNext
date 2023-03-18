@@ -33,7 +33,7 @@ export default class MediaService extends BaseService {
 
 
     async deleteImage(knex, id) {
-        const currentMedia = await this.dao.fetchOne({
+        const currentMedia = await this.fetchOne({
             knex: knex,
             where: { id }
         });
@@ -77,7 +77,7 @@ export default class MediaService extends BaseService {
 
 
     async deleteVideo(knex, id) {
-        const currentMedia = await this.dao.fetchOne({
+        const currentMedia = await this.fetchOne({
             knex: knex,
             where: { id }
         });

@@ -19,7 +19,7 @@ export default class TenantController extends BaseController {
                 }
             });
 
-            const response = await this.TenantService.dao.fetchOne({
+            const response = await this.TenantService.fetchOne({
                 knex: request.knex,
                 where: { id: this.TenantService.getTenantIdFromAuth(request) }
             });

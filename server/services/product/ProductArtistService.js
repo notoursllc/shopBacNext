@@ -25,10 +25,7 @@ export default class ProductService extends BaseService {
 
         delete payload.file;
 
-        return this.dao.upsertOne({
-            knex: knex,
-            data: payload
-        });
+        return this.upsertOne(knex, payload);
     }
 
 

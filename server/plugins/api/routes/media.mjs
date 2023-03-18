@@ -18,7 +18,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...MediaCtrl.service.getIdValidationSchema()
+                        ...MediaCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -62,7 +62,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...MediaCtrl.service.getIdValidationSchema()
+                        ...MediaCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -108,7 +108,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...MediaCtrl.service.getIdValidationSchema()
+                        ...MediaCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

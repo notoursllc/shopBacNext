@@ -18,14 +18,29 @@ export default class ProductDao extends BaseDao {
             id: Joi.string().uuid(),
             tenant_id: Joi.string().uuid(),
             published: Joi.boolean(),
-            title: Joi.alternatives().try(Joi.string().trim().max(100), Joi.allow(null)),
-            caption: Joi.alternatives().try(Joi.string().trim().max(200), Joi.allow(null)),
-            description: Joi.alternatives().try(Joi.string().trim().max(2000), Joi.allow(null)),
-            copyright: Joi.alternatives().try(Joi.string().trim().max(200), Joi.allow(null)),
+            title: Joi.alternatives().try(
+                Joi.string().trim().max(100),
+                Joi.allow(null)
+            ),
+            caption: Joi.alternatives().try(
+                Joi.string().trim().max(200),
+                Joi.allow(null)
+            ),
+            description: Joi.alternatives().try(
+                Joi.string().trim().max(2000),
+                Joi.allow(null)
+            ),
+            copyright: Joi.alternatives().try(
+                Joi.string().trim().max(200),
+                Joi.allow(null)
+            ),
             is_good: Joi.boolean(),
 
             // these should be stringified values in the payload:
-            metadata: Joi.alternatives().try(Joi.array(), Joi.allow(null)),
+            metadata: Joi.alternatives().try(
+                Joi.array(),
+                Joi.allow(null)
+            ),
 
             // TYPES
             type: joiPositiveNumberOrNull,

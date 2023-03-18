@@ -43,7 +43,7 @@ export default class ExchangeRateService extends BaseService {
 
 
     fetchRate(knex) {
-        return this.dao.fetchOne({
+        return this.fetchOne({
             knex: knex,
             where: { id: 1 }
         });

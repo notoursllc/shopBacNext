@@ -33,7 +33,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...MasterTypeCtrl.service.getIdValidationSchema()
+                        ...MasterTypeCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -105,7 +105,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...MasterTypeCtrl.service.getIdValidationSchema()
+                        ...MasterTypeCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

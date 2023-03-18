@@ -61,7 +61,7 @@ export default class ProductVariantSkuService extends BaseService {
             meta: data
         });
 
-        const OldSku = await this.dao.fetchOne({
+        const OldSku = await this.fetchOne({
             knex: knex,
             where: { id: data.id }
         });
@@ -142,7 +142,7 @@ export default class ProductVariantSkuService extends BaseService {
             meta: { id }
         });
 
-        const Sku = await this.dao.fetchOne({
+        const Sku = await this.fetchOne({
             knex: knex,
             where: { id: id }
         });

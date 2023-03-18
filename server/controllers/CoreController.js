@@ -15,22 +15,10 @@ export default class CoreController extends BaseController {
 
     async appConfigHandler(request, h) {
         try {
-            // global.logger.info('REQUEST: ProductController.getProducts', {
-            //     meta: {
-            //         query: request.query
-            //     }
-            // });
-
-            // const data = await ProductService.getProducts(
+            // const data = await ProductService.search(
             //     request.knex,
             //     request.query
             // );
-
-            // global.logger.info('RESPONSE: ProductController.getProducts', {
-            //     meta: {
-            //         numProducts: data.data.length
-            //     }
-            // });
 
             // return h.apiSuccess(data);
             return h.apiSuccess({ test: 'appconfig test'});
@@ -45,7 +33,7 @@ export default class CoreController extends BaseController {
 
     async healthzHandler(request, h) {
         try {
-            const result = await this.ProductService.dao.fetchOne({
+            const result = await this.ProductService.fetchOne({
                 knex: request.knex,
                 columns: ['created_at'],
                 where: { 'id': { 'ne':'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' } }
@@ -126,7 +114,10 @@ export default class CoreController extends BaseController {
             };
 
             const ProductService = new ProductService();
-            const Products = await ProductService.getProducts(request.knex, null, false);
+            const Products = await ProductService.search({
+                knex: request.knex,
+                paginate: false
+            });
 
             if(Products) {
                 Products.forEach((obj) => {

@@ -13,14 +13,14 @@ export default class PackageTypeService extends BaseService {
         return {
             // ordinals: Joi.array().items(
             //     Joi.object().keys({
-            //         ...this.getIdValidationSchema(),
+            //         ...this.getValidationSchemaForId(),
             //         ordinal: Joi.number().integer().required()
             //     })
             // )
             ordinals: Joi.alternatives().try(
                 Joi.array().items(
                     Joi.object().keys({
-                        ...this.getIdValidationSchema(),
+                        ...this.getValidationSchemaForId(),
                         ordinal: Joi.number().integer().required()
                     })
                 ),

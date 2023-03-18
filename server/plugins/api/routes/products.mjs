@@ -22,7 +22,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return ProductCtrl.getProductsHandler(request, h)
+                    return ProductCtrl.searchHandler(request, h)
                 }
             }
         },
@@ -36,11 +36,11 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductCtrl.service.getIdValidationSchema()
+                        ...ProductCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
-                    return ProductCtrl.getProductHandler(request, h)
+                    return ProductCtrl.getByIdHandler(request, h)
                 }
             }
         },
@@ -103,7 +103,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductCtrl.service.getIdValidationSchema()
+                        ...ProductCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

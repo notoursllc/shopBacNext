@@ -53,7 +53,7 @@ export default (server) => {
         // keepAlive: true,
         validate: async (request, session) => {
             const knex = TenantKnexManager.getKnexForTenant(process.env.TENANT_ID_BYPASSRLS);
-            const tenantMember = await TenantMemberSvc.dao.fetchOne({
+            const tenantMember = await TenantMemberSvc.fetchOne({
                 knex: knex,
                 where: { id: session.id },
                 columns: TenantMemberSvc.dao.getAllColumns(true)

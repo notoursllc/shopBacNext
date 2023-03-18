@@ -14,7 +14,7 @@ export default class BaseController {
 
 
     async throwIfNotFound(knex, id) {
-        const Model = await this.service.dao.fetchOne({
+        const Model = await this.service.fetchOne({
             knex: knex,
             where: { id }
         });
@@ -29,18 +29,22 @@ export default class BaseController {
 
     async getByIdHandler(request, h) {
         try {
-            global.logger.info(`REQUEST: ${this.getControllerName()}.getOneHandler`, {
+            global.logger.info(`REQUEST: ${this.getControllerName()}.getByIdHandler`, {
                 meta: {
                     query: request.query
                 }
             });
 
-            const response = await this.service.dao.fetchOne({
+            const response = await this.service.fetchOne({
                 knex: request.knex,
                 where: { id: request.query.id }
             });
 
-            global.logger.info(`RESPONSE: ${this.getControllerName()}.getOneHandler`, {
+            // if(!response) {
+            //     throw Boom.notFound();
+            // }
+
+            global.logger.info(`RESPONSE: ${this.getControllerName()}.getByIdHandler`, {
                 meta: response
             });
 
@@ -64,10 +68,7 @@ export default class BaseController {
                 await this.throwIfNotFound(request.knex, request.payload.id);
             }
 
-            const response = await this.service.dao.upsertOne({
-                knex: request.knex,
-                data: request.payload
-            });
+            const response = await this.service.upsertOne(request.knex, request.payload);
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.upsertHandler`, {
                 meta: response
@@ -117,10 +118,7 @@ export default class BaseController {
                 }
             });
 
-            const response = await this.service.dao.search({
-                knex: request.knex,
-                where: request.query
-            });
+            const response = await this.service.search(request.knex, request.query)
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.searchHandler`, {
                 meta: {
@@ -146,7 +144,7 @@ export default class BaseController {
 
             await this.throwIfNotFound(request.knex, request.payload.id);
 
-            const response = await this.service.dao.del({
+            const response = await this.service.del({
                 knex: request.knex,
                 where: { id: request.payload.id }
             });
@@ -155,7 +153,7 @@ export default class BaseController {
                 meta: response
             });
 
-            return h.apiSuccess(response);
+            return h.apiSuccess(request.payload.id);
         }
         catch(err) {
             global.logger.error(err);

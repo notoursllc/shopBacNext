@@ -7,6 +7,89 @@ export default class BaseService {
     }
 
 
+    async search(config) {
+        return config.knex.client.transaction(async trx => {
+            const results = await this.dao.search({
+                ...config,
+                knex: trx
+            });
+
+            if(results?.data.length) {
+                await this.addRelations(trx, results.data);
+            }
+
+            return results;
+        });
+    }
+
+
+    async fetchOne(config) {
+        return config.knex.client.transaction(async trx => {
+            const result = await this.dao.fetchOne({
+                ...config,
+                knex: trx
+            });
+
+            if(result) {
+                await this.addRelations(trx, result);
+            }
+
+            return result;
+        });
+    }
+
+
+    async upsertOne(knex, data) {
+        const results = await this.dao.upsertOne({
+            knex,
+            data
+        });
+
+        if(results) {
+            await this.addRelations(knex, results);
+        }
+
+        return results;
+    }
+
+
+    async del(config) {
+        return config.knex.transaction(async trx => {
+            const Model = await this.fetchOne({
+                ...config,
+                knex: trx,
+            });
+
+            if(!Model) {
+                throw new Error('Item does not exist');
+            }
+
+            await this.deleteRelations(trx, Model.id);
+
+            return this.dao.del({
+                knex: trx,
+                where: { id: Model.id }
+            });
+        });
+    }
+
+
+    /*
+    * This method is meant to be extended
+    */
+    addRelations(knex, results) {
+        return results;
+    }
+
+
+    /*
+    * This method is meant to be extended
+    */
+    deleteRelations(knex, id) {
+        return;
+    }
+
+
     getTenantIdFromAuth(request) {
         return request.auth?.credentials?.tenant_id;
     }
@@ -39,7 +122,7 @@ export default class BaseService {
     }
 
 
-    getIdValidationSchema() {
+    getValidationSchemaForId() {
         return {
             id: Joi.string().uuid().required()
         }
@@ -68,7 +151,7 @@ export default class BaseService {
             ordinals: Joi.alternatives().try(
                 Joi.array().items(
                     Joi.object().keys({
-                        ...this.getIdValidationSchema(),
+                        ...this.getValidationSchemaForId(),
                         ordinal: Joi.number().integer().required()
                     })
                 ),

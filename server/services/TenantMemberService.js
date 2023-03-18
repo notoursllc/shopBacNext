@@ -21,7 +21,7 @@ export default class TenantMemberService extends BaseService {
 
 
     async login(knex, email, password) {
-        const TenantMember = await this.dao.fetchOne({
+        const TenantMember = await this.fetchOne({
             knex: knex,
             where: { email: email, active: true },
             columns: this.dao.getAllColumns(true)

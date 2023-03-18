@@ -33,7 +33,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getIdValidationSchema()
+                        ...ProductAccentMessageCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {
@@ -87,7 +87,7 @@ export default (server) => {
                 },
                 validate: {
                     payload: Joi.object({
-                        ...ProductAccentMessageCtrl.service.getIdValidationSchema()
+                        ...ProductAccentMessageCtrl.service.getValidationSchemaForId()
                     })
                 },
                 handler: (request, h) => {

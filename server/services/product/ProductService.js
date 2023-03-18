@@ -14,23 +14,6 @@ export default class ProductService extends BaseService {
     }
 
 
-    async getProducts(knex, query, paginate) {
-        return knex.client.transaction(async trx => {
-            const products = await this.dao.search({
-                knex: trx,
-                where: query,
-                paginate: paginate
-            });
-
-            if(products?.data.length) {
-                await this.addRelations(trx, products.data);
-            }
-
-            return products;
-        });
-    }
-
-
     async upsert(knex, data) {
         global.logger.info('REQUEST: ProductService.upsert', {
             meta: data
@@ -49,46 +32,12 @@ export default class ProductService extends BaseService {
 
             if(Product) {
                 await this.ProductVariantService.upsertMultiple(trx, variants, Product)
-                const UpdatedProduct = await this.dao.fetchOne({
+                const UpdatedProduct = await this.fetchOne({
                     knex: trx,
                     where: { id: Product.id }
                 });
-                await this.addRelations(trx, UpdatedProduct);
                 return UpdatedProduct;
             }
-        });
-    }
-
-
-    async del(knex, id) {
-        global.logger.info('REQUEST: ProductService.del', {
-            meta: { id }
-        });
-
-        return knex.transaction(async trx => {
-            return Promise.all([
-                this.ProductVariantService.deleteForProduct(trx, id),
-                this.dao.del({
-                    knex: trx,
-                    where: { id: id }
-                })
-            ]);
-        });
-    }
-
-
-    async getProduct(knex, id) {
-        return knex.client.transaction(async trx => {
-            const product = await this.dao.fetchOne({
-                knex: trx,
-                where: { id }
-            });
-
-            if(product) {
-                await this.addRelations(trx, product);
-            }
-
-            return product;
         });
     }
 
@@ -98,6 +47,11 @@ export default class ProductService extends BaseService {
             this.ProductVariantService.addRelationToProducts(knex, products),
             this.ProductArtistService.addRelationToProducts(knex, products)
         ]);
+    }
+
+
+    deleteRelations(knex, id) {
+        return this.ProductVariantService.deleteForProduct(knex, id);
     }
 
 
