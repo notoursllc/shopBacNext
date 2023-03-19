@@ -151,21 +151,25 @@ export default class BaseDao {
     * Config: {
     *   knex: required
     *   where: N/A
-    *   data: required
+    *   data: optional
     *   columns: optional
     * }
+    *
+    * NOTE: config.data is optional because I realized there is a use case
+    * for only inserting the tenant_id in the row, which is when a new Cart is created.
     */
     async create(config) {
         assertKnex(config);
-        assertData(config);
 
         try {
             const knex = config.knex;
 
-            const payload = this.prepareForUpsert(config.data);
+            const payload = config.data ? this.prepareForUpsert(config.data) : {}
             if(this.tableName !== this.tables.tenants && this.schema.hasOwnProperty('tenant_id')) {
                 payload.tenant_id = knex.userParams.tenant_id;
             }
+
+            delete payload.id;
 
             // awaiting the reponse will cause errors to be caught
             // in the catch block.  Otherwise the errors will be returned,
@@ -236,19 +240,9 @@ export default class BaseDao {
 
     /**
      * Creates or Updates a DB record
-     *
-     * Config: {
-     *   knex: required
-     *   data: required
-     *   where: optional
-     *   columns: optional
-     * }
      */
     async upsertOne(config) {
-        assertKnex(config);
-        assertData(config);
-
-        if(config.data.id) {
+        if(config.data?.id) {
             return this.update({
                 ...config,
                 where: {
@@ -538,16 +532,16 @@ export default class BaseDao {
      * @returns []
      */
     async addRelations(parentResults, parentResultKey, childQuery, childResultKey, relationName, oneToOne = false) {
-        const whereInArray = [];
+        const whereInSet = new Set();  // use a Set so dupes are not collected
         const data = makeArray(parentResults)
 
         data.forEach(result => {
             if(result.hasOwnProperty(parentResultKey) && result[parentResultKey] !== null) {
-                whereInArray.push( result[parentResultKey] );
+                whereInSet.add( result[parentResultKey] );
             }
         });
 
-        const relations = await childQuery.whereIn(childResultKey, whereInArray);
+        const relations = await childQuery.whereIn(childResultKey, Array.from(whereInSet));
 
         data.map((row) => {
             const filteredRelations = relations.filter((r) => r[childResultKey] === row[parentResultKey]);

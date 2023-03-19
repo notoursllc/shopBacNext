@@ -1,7 +1,7 @@
 import isObject from 'lodash.isobject';
 import BaseService from '../BaseService.js';
 import CartDao from '../../db/dao/cart/CartDao.js';
-import CartItemsService from './CartItemsService.js';
+import CartItemService from './CartItemService.js';
 import StripeService from '../StripeService.js';
 import TenantService from '../TenantService.js';
 import { sendEmail, compileMjmlTemplate } from '../email/EmailService.js';
@@ -12,9 +12,24 @@ export default class CartService extends BaseService {
 
     constructor() {
         super(new CartDao());
-        this.CartItemsService = new CartItemsService();
+        this.CartItemService = new CartItemService();
         this.StripeService = new StripeService();
         this.TenantService = new TenantService();
+    }
+
+
+    getActiveCart(knex, id) {
+        if(!id) {
+            return false;
+        }
+
+        return this.fetchOne({
+            knex: knex,
+            where: {
+                id: id,
+                closed_at: { 'null': true }
+            }
+        });
     }
 
 
@@ -26,6 +41,32 @@ export default class CartService extends BaseService {
                 closed_at: { 'null': false }
             }
         })
+    }
+
+
+    async getOrCreateCart(knex, id) {
+        const Cart = await this.getActiveCart(knex, id);
+
+        if(Cart) {
+            return Cart;
+        }
+
+        return this.upsertOne({
+            knex: knex
+        });
+    }
+
+
+    clearShippingRate(knex, id, fetchRelations) {
+        return this.upsertOne({
+            knex: knex,
+            data: {
+                id: id,
+                selected_shipping_rate: null,
+                shipping_rate_quote: null
+            },
+            fetchRelations: fetchRelations
+        });
     }
 
 
@@ -311,7 +352,7 @@ export default class CartService extends BaseService {
 
 
     addRelations(knex, carts) {
-        return this.CartItemsService.addRelationToCarts(knex, carts)
+        return this.CartItemService.addRelationToCarts(knex, carts)
     }
 
 

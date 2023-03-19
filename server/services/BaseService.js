@@ -7,6 +7,13 @@ export default class BaseService {
     }
 
 
+    /**
+     * A convenience method wrapper around dao.search
+     * that also returns model relations unless declined
+     * by config.fetchRelations = false
+     *
+     * @param {*} config
+     */
     async search(config) {
         return config.knex.client.transaction(async trx => {
             const results = await this.dao.search({
@@ -14,7 +21,7 @@ export default class BaseService {
                 knex: trx
             });
 
-            if(results?.data.length) {
+            if(results?.data.length && config.fetchRelations !== false) {
                 await this.addRelations(trx, results.data);
             }
 
@@ -23,6 +30,13 @@ export default class BaseService {
     }
 
 
+    /**
+     * A convenience method wrapper around dao.fetchOne
+     * that also returns model relations unless declined
+     * by config.fetchRelations = false
+     *
+     * @param {*} config
+     */
     async fetchOne(config) {
         return config.knex.client.transaction(async trx => {
             const result = await this.dao.fetchOne({
@@ -30,7 +44,7 @@ export default class BaseService {
                 knex: trx
             });
 
-            if(result) {
+            if(result && config.fetchRelations !== false) {
                 await this.addRelations(trx, result);
             }
 
@@ -39,10 +53,17 @@ export default class BaseService {
     }
 
 
+    /**
+     * A convenience method wrapper around dao.upsertOne
+     * that also returns model relations unless declined
+     * by config.fetchRelations = false
+     *
+     * @param {*} config
+     */
     async upsertOne(config) {
         const results = await this.dao.upsertOne(config);
 
-        if(results) {
+        if(results && config.fetchRelations !== false) {
             await this.addRelations(config.knex, results);
         }
 
@@ -94,6 +115,8 @@ export default class BaseService {
 
     getValidationSchemaForUpdate() {
         const schemaCopy = { ...this.dao.schema };
+        schemaCopy.id = schemaCopy.id.required();
+
         delete schemaCopy.tenant_id;
         delete schemaCopy.created_at;
         delete schemaCopy.updated_at;
@@ -103,8 +126,14 @@ export default class BaseService {
 
 
     getValidationSchemaForAdd() {
-        const schemaCopy = this.getValidationSchemaForUpdate();
+        const schemaCopy = { ...this.dao.schema };
+
         delete schemaCopy.id;
+        delete schemaCopy.tenant_id;
+        delete schemaCopy.created_at;
+        delete schemaCopy.updated_at;
+        delete schemaCopy.deleted_at;
+
         return schemaCopy;
     }
 

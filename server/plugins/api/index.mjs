@@ -5,6 +5,7 @@ import serverExtensions from './serverExtensions.js';
 
 // routes
 import cartRoutes from './routes/carts.mjs';
+import cartItemsRoutes from './routes/cart_items.mjs';
 import cartRefundRoutes from './routes/cart_refunds.mjs';
 import coreRoutes from './routes/core.mjs';
 import exchangeRateRoutes from './routes/exchange_rates.mjs';
@@ -42,6 +43,7 @@ export default {
                 function (server) {
                     serverExtensions(server);
                     cartRoutes(server);
+                    cartItemsRoutes(server);
                     cartRefundRoutes(server);
                     coreRoutes(server);
                     exchangeRateRoutes(server);
