@@ -6,8 +6,7 @@ import TenantService from '../services/TenantService.js';
 export default class TenantController extends BaseController {
 
     constructor() {
-        super();
-        this.TenantService = new TenantService();
+        super(new TenantService());
     }
 
 
@@ -19,16 +18,16 @@ export default class TenantController extends BaseController {
                 }
             });
 
-            const response = await this.TenantService.fetchOne({
+            const response = await this.service.dao.fetchOne({
                 knex: request.knex,
-                where: { id: this.TenantService.getTenantIdFromAuth(request) }
+                where: { id: this.service.getTenantIdFromAuth(request) }
             });
 
             if(!response) {
                 throw new Error('Tenant can not be found');
             }
 
-            this.TenantService.sendContactUsEmailToAdmin({
+            this.service.sendContactUsEmailToAdmin({
                 ...request.payload,
                 application_name: response.application_name,
             });
@@ -53,7 +52,7 @@ export default class TenantController extends BaseController {
                 meta: {}
             });
 
-            const rates = await this.TenantService.getSupportedCurrenyRates(request.knex);
+            const rates = await this.service.getSupportedCurrenyRates(request.knex);
 
             global.logger.info(`RESPONSE: TenantController.exchangeRatesHandler`, {
                 meta: { rates }
@@ -77,7 +76,7 @@ export default class TenantController extends BaseController {
                 }
             });
 
-            const Tenant = await this.TenantService.update(
+            const Tenant = await this.service.update(
                 request.knex,
                 request.knex.userParams.tenant_id,
                 request.payload
@@ -101,7 +100,7 @@ export default class TenantController extends BaseController {
         try {
             global.logger.info('REQUEST: TenantController.updateApiKeyHandler', {});
 
-            const Tenant = await this.TenantService.updateApiKey(
+            const Tenant = await this.service.updateApiKey(
                 request.knex,
                 request.knex.userParams.tenant_id
             );
@@ -124,7 +123,7 @@ export default class TenantController extends BaseController {
         try {
             global.logger.info('REQUEST: TenantController.deleteApiKeyHandler', {});
 
-            const Tenant = await this.TenantService.removeApiKey(
+            const Tenant = await this.service.removeApiKey(
                 request.knex,
                 request.knex.userParams.tenant_id
             );
@@ -151,7 +150,7 @@ export default class TenantController extends BaseController {
                 }
             });
 
-            const Account = await this.TenantService.fetchAccount(request.knex, request.knex.userParams.tenant_id);
+            const Account = await this.service.fetchAccount(request.knex, request.knex.userParams.tenant_id);
 
             if(!Account) {
                 return h.apiSuccess();

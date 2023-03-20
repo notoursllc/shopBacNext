@@ -1,15 +1,14 @@
-import axios from 'axios';
 import isObject from 'lodash.isobject';
 import TenantService from '../TenantService.js';
 import CartService from '../cart/CartService.js';
 import PackageService from '../PackageService.js';
+import ShipEngineApi from './ShipEngineApi.js';
 
 
 export default class ShipEngineService {
 
     constructor() {
         this.TenantService = new TenantService();
-        this.CartService = new CartService();
     }
 
 
@@ -66,6 +65,7 @@ export default class ShipEngineService {
 
     async getApiPackageTypes(knex, cart, packageTypes) {
         const package_types = [];
+        const CartSvc = new CartService();
 
         // if any of the DB packageTypes have a specific value defined, then add it:
         packageTypes.forEach((type) => {
@@ -79,7 +79,7 @@ export default class ShipEngineService {
         // (This may change though as I learn more about shipping)
         // NOTE: currently, I am only using USPS, so this will always be true.  Future proofing though
         // in case I use fedex someday
-        const service_codes = await this.CartService.getServiceCodesForCart(knex, cart);
+        const service_codes = await this.getServiceCodesForCart(knex, cart);
         if(
             (service_codes.includes('usps_priority_mail') || service_codes.includes('usps_priority_mail_international'))
             && !package_types.includes('package')
@@ -125,6 +125,7 @@ export default class ShipEngineService {
      * @param {*} cart
      */
      async getRatesApiPayload(knex, cart, packageTypes) {
+        const CartSvc = new CartService();
         const Tenant = await this.getTenant(knex);
         const carrierIds = await this.getCarrierIdsForTenant(knex);
         const serviceCodes = await this.getServiceCodesForCart(knex, cart);
@@ -168,7 +169,7 @@ export default class ShipEngineService {
             };
 
             const packingResults = PackageService.packProducts(
-                this.CartService.getProductArrayFromCart(cart),
+                CartSvc.getProductArrayFromCart(cart),
                 packageTypes
             );
 
@@ -214,7 +215,7 @@ export default class ShipEngineService {
                 // Now we add to that value the combined weight of all products in the box:
                 if(Array.isArray(obj.products)) {
                     obj.products.forEach((prod) => {
-                        apiPackage.weight.value += this.CartService.getProductWeight(prod.id, cart);
+                        apiPackage.weight.value += CartSvc.getProductWeight(prod.id, cart);
                     });
                 }
 
@@ -259,7 +260,7 @@ export default class ShipEngineService {
                 });
             }
 
-            const { rate_response } = await this.getRates(knex, apiArgs);
+            const { rate_response } = await ShipEngineApi.getRates(knex, apiArgs);
             const response = {};
 
             // apiArgs.shipment.packages.forEach((obj) => {

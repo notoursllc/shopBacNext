@@ -63,7 +63,7 @@ export default (server) => {
         },
         {
             method: 'POST',
-            path: '/cart/shippingaddress/validate',
+            path: '/cart/shipping/validateAddress',
             options: {
                 description: 'Validates the shipping address for the cart',
                 auth: {
@@ -79,6 +79,26 @@ export default (server) => {
                 }
             }
         },
+        {
+            method: 'POST',
+            path: '/cart/shipping/estimate',
+            options: {
+                description: 'Returns shipping rates for the cart',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                validate: {
+                    payload: Joi.object({
+                        ...CartCtrl.service.getValidationSchemaForId()
+                    })
+                },
+                handler: (request, h) => {
+                    return CartCtrl.shippingRateEstimateHandler(request, h);
+                }
+            }
+        },
+
+
         {
             method: 'GET',
             path: '/cart/order',
