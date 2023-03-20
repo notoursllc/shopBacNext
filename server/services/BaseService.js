@@ -21,8 +21,13 @@ export default class BaseService {
                 knex: trx
             });
 
-            if(results?.data.length && config.fetchRelations !== false) {
-                await this.addRelations(trx, results.data);
+            if(config.fetchRelations !== false) {
+                // Unpaginated results return an array
+                // Paginated results return an object with 'data' and 'pagination' props
+                await this.addRelations(
+                    trx,
+                    Array.isArray(results) ? results : (results?.data || [])
+                );
             }
 
             return results;

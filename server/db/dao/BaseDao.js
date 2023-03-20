@@ -62,7 +62,11 @@ export default class BaseDao {
     *   data: N/A
     *   columns: optional
     *   paginate: optional (default true)
+    *   orderBy: optional
     * }
+    *
+    * @example orderBy: ['id:DESC']
+    * @example orderBy: ['id:DESC', 'foo:ASC']
     */
     async search(config) {
         assertKnex(config);
@@ -83,6 +87,17 @@ export default class BaseDao {
             if(!config.where?.deleted_at && this.isSoftDelete()) {
                 qb.whereNull('deleted_at')
             }
+
+            // order by:
+            makeArray(config.orderBy).forEach((str) => {
+                const pair = str.split(':').map(val => val.trim());
+
+                if(pair.length === 2
+                    && ['asc', 'desc'].includes( pair[1].toLowerCase() )
+                    && this.getAllColumns().includes(pair[0])) {
+                        qb.orderBy(pair[0], pair[1].toLowerCase())
+                }
+            })
 
             let response;
             if(config.paginate !== false) {
