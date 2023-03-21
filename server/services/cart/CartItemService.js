@@ -256,7 +256,7 @@ export default class CartItemService extends BaseService {
             'cart_items'
         );
 
-        carts?.forEach((cart) => {
+        makeArray(carts).forEach((cart) => {
             this.addVirtuals(cart.cart_items);
         });
 
