@@ -1,6 +1,5 @@
 import Joi from 'joi';
-import BaseDao from '../BaseDao.js';
-import { makeArray } from '../../../utils/index.js';
+import BaseModel from '../BaseModel.js';
 
 function getJoiStringOrNull(strLen) {
     return Joi.alternatives().try(
@@ -9,7 +8,7 @@ function getJoiStringOrNull(strLen) {
     );
 }
 
-export default class CartDao extends BaseDao {
+export default class CartModel extends BaseModel {
 
     constructor() {
         super();
@@ -46,7 +45,7 @@ export default class CartDao extends BaseDao {
             billing_postalCode: getJoiStringOrNull(),
             billing_countryCodeAlpha2: getJoiStringOrNull(2),
             billing_phone: getJoiStringOrNull(),
-            billing_same_as_shipping: Joi.boolean().default(true),
+            billing_same_as_shipping: Joi.boolean(),
             ...this.shippingAddressSchema,
             currency: Joi.alternatives().try(
                 Joi.string().empty(''),
@@ -89,27 +88,6 @@ export default class CartDao extends BaseDao {
             closed_at: Joi.date(),
             shipped_at: Joi.date()
         }
-    }
-
-
-    addVirtuals(data) {
-        makeArray(data).forEach((cart) => {
-            cart.shipping_fullName = (function(obj) {
-                let val = [];
-
-                if(obj.shipping_firstName) {
-                    val.push(obj.shipping_firstName);
-                }
-
-                if(obj.shipping_lastName) {
-                    val.push(obj.shipping_lastName);
-                }
-
-                return val.join(' ');
-            })(cart);
-        });
-
-        return data;
     }
 
 }

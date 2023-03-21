@@ -3,7 +3,7 @@ import Joi from 'joi';
 import cloneDeep from 'lodash.clonedeep';
 import isString from 'lodash.isstring';
 import BaseService from '../BaseService.js';
-import ProductVariantDao from '../../db/dao/product/ProductVariantDao.js';
+import ProductVariantModel from '../../models/product/ProductVariantModel.js';
 import ProductVariantSkuService from './ProductVariantSkuService.js'
 import { makeArray } from '../../utils/index.js';
 import BunnyAPI from '../BunnyAPI.js';
@@ -11,7 +11,7 @@ import BunnyAPI from '../BunnyAPI.js';
 export default class ProductVariantService extends BaseService {
 
     constructor() {
-        super(new ProductVariantDao());
+        super(new ProductVariantModel());
         this.ProductVariantSkuService = new ProductVariantSkuService();
     }
 
@@ -32,13 +32,13 @@ export default class ProductVariantService extends BaseService {
 
         let ProductVariant;
         if(dataCopy.id) {
-            ProductVariant = await this.dao.update({
+            ProductVariant = await this.update({
                 ...daoConfig,
                 where: { id: dataCopy.id }
             });
         }
         else {
-            ProductVariant = await this.dao.create(daoConfig);
+            ProductVariant = await this.create(daoConfig);
         }
 
         data.skus?.forEach((sku) => {
@@ -93,8 +93,7 @@ export default class ProductVariantService extends BaseService {
             meta: { product_id }
         });
 
-        // await this.addRelationToProducts(knex, Product);
-        const ProductVariants = await this.dao.search({
+        const ProductVariants = await this.search({
             knex: knex,
             where: { product_id: product_id },
             paginate: false
@@ -149,7 +148,7 @@ export default class ProductVariantService extends BaseService {
                     // Take the matched index out of the images array
                     Variant.images.splice(matchedIndex, 1);
 
-                    return this.dao.update({
+                    return this.update({
                         knex: knex,
                         where: { id: variantId },
                         data: { images: Variant.images }
@@ -167,11 +166,11 @@ export default class ProductVariantService extends BaseService {
      * @param {*} products
      * @returns []
      */
-    async addRelationToProducts(knex, products) {
-        await this.dao.addRelations(
+    async addVariantsRelationToProducts(knex, products) {
+        await this.setRelations(
             products,
             'id',
-            knex.select(this.dao.getAllColumns()).from(this.dao.tableName).whereNull('deleted_at'),
+            knex.select(this.model.getAllColumns()).from(this.model.tableName).whereNull('deleted_at'),
             'product_id',
             'variants'
         );
@@ -179,10 +178,27 @@ export default class ProductVariantService extends BaseService {
         const prodArray = makeArray(products);
         for(let i=0, l=prodArray.length; i<l; i++) {
             await this.ProductVariantSkuService.addSkuRelationsToVariants(knex, prodArray[i].variants);
-            this.dao.addVirtuals(prodArray[i].variants);
+            this.addVirtuals(prodArray[i].variants);
         }
 
         return products;
+    }
+
+
+    addVirtuals(data) {
+        makeArray(data).forEach((variant) => {
+            variant.total_inventory_count = (function(v) {
+                let totalCount = 0;
+
+                makeArray(v.skus).forEach((obj) => {
+                    totalCount += (obj.inventory_count || 0);
+                });
+
+                return totalCount;
+            })(variant);
+        });
+
+        return data;
     }
 
 

@@ -1,11 +1,11 @@
 
 import BaseService from '../BaseService.js';
-import ProductCollectionDao from '../../db/dao/product/ProductCollectionDao.js';
+import ProductCollectionModel from '../../models/product/ProductCollectionModel.js';
 
 export default class ProductCollectionService extends BaseService {
 
     constructor() {
-        super(new ProductCollectionDao());
+        super(new ProductCollectionModel());
     }
 
 

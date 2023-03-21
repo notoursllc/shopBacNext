@@ -1,12 +1,12 @@
 import Joi from 'joi';
-import HeroDao from '../db/dao/HeroDao.js';
+import HeroModel from '../models/HeroModel.js';
 import BaseService from './BaseService.js';
 import BunnyAPI from './BunnyAPI.js';
 
 export default class HeroService extends BaseService {
 
     constructor() {
-        super(new HeroDao());
+        super(new HeroModel());
     }
 
 
@@ -36,7 +36,7 @@ export default class HeroService extends BaseService {
 
         delete payload.file;
 
-        return this.dao.create({
+        return this.create({
             knex: knex,
             data: payload
         });
@@ -53,7 +53,7 @@ export default class HeroService extends BaseService {
 
         delete payload.file;
 
-        return this.dao.update({
+        return this.update({
             knex: knex,
             where: { id: data.id },
             data: payload,

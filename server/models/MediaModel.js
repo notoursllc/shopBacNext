@@ -1,7 +1,7 @@
 import Joi from 'joi';
-import BaseDao from './BaseDao.js';
+import BaseModel from './BaseModel.js';
 
-export default class MediaDao extends BaseDao {
+export default class MediaModel extends BaseModel {
 
     constructor() {
         super();

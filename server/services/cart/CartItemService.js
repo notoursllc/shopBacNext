@@ -5,29 +5,29 @@ import CartService from './CartService.js';
 import ProductService from '../product/ProductService.js';
 import ProductVariantService from '../product/ProductVariantService.js';
 import ProductVariantSkuService from '../product/ProductVariantSkuService.js';
-import CartItemDao from '../../db/dao/cart/CartItemDao.js';
+import CartItemModel from '../../models/cart/CartItemModel.js';
 import { makeArray } from '../../utils/index.js';
 
 export default class CartItemService extends BaseService {
 
     constructor() {
-        super(new CartItemDao());
+        super(new CartItemModel());
         this.ProductService = new ProductService();
         this.ProductVariantService = new ProductVariantService();
-        this.ProductVariantSkuService = new ProductVariantSkuService();
     }
 
 
-    async create(knex, data) {
+    async createCartItem(knex, data) {
         // NOTE: this.CartService can not be in the constructor
         // because it will result in an infinite loop because
         // CartItemService is in the constructor of CartService
         const CartSvc = new CartService();
+        const ProductVariantSkuSvc = new ProductVariantSkuService();
 
         // Fetch the SKU to make sure it exists
         // and also fetch the Cart
         const [ ProductVariantSku, Cart ] = await Promise.all([
-            this.ProductVariantSkuService.fetchOne({
+            ProductVariantSkuSvc.fetchOne({
                 knex: knex,
                 where: { id: data.product_variant_sku_id },
                 fetchRelations: false
@@ -131,7 +131,7 @@ export default class CartItemService extends BaseService {
      * @param {*} data
      * @returns
      */
-    async update(knex, id, qty) {
+    async updateCartItem(knex, id, qty) {
         const CartItem = await this.fetchOne({
             knex: knex,
             where: { id },
@@ -146,7 +146,7 @@ export default class CartItemService extends BaseService {
 
         return knex.transaction(async trx => {
             // Update the CartItem qty value
-            await this.dao.update({
+            await this.update({
                 knex: trx,
                 where: { id },
                 data: { qty: requestQty }
@@ -166,7 +166,7 @@ export default class CartItemService extends BaseService {
      * @param {*} data
      * @returns
      */
-    async del(knex, id) {
+    async deleteCartItem(knex, id) {
         const CartItem = await this.fetchOne({
             knex: knex,
             where: { id },
@@ -178,7 +178,7 @@ export default class CartItemService extends BaseService {
         }
 
         return knex.transaction(async trx => {
-            await this.dao.del({
+            await this.del({
                 knex: trx,
                 where: { id }
             });
@@ -248,24 +248,57 @@ export default class CartItemService extends BaseService {
      * @returns []
      */
     async addRelationToCarts(knex, carts) {
-        await this.dao.addRelations(
+        await this.setRelations(
             carts,
             'id',
-            knex.select(this.dao.getAllColumns()).from(this.dao.tableName).whereNull('deleted_at'),
+            knex.select(this.model.getAllColumns()).from(this.model.tableName).whereNull('deleted_at'),
             'cart_id',
             'cart_items'
         );
 
-        makeArray(carts).forEach((cart) => {
-            this.dao.addVirtuals(cart.cart_items);
+        carts?.forEach((cart) => {
+            this.addVirtuals(cart.cart_items);
         });
 
         return carts;
     }
 
 
+    addVirtuals(data) {
+        makeArray(data).forEach((cartItem) => {
+            cartItem.item_price_total = (function(obj) {
+                let total = null;
+
+                if(obj.qty) {
+                    const displayPrice = obj.product_variant_sku?.display_price;
+                    total = displayPrice ? displayPrice * obj.qty : null;
+
+                    // if(total !== null) {
+                    //     total = accounting.toFixed(total, 2);
+                    // }
+                }
+
+                return total;
+            })(cartItem);
+
+            cartItem.item_weight_total = (function(obj) {
+                let total = null;
+
+                if(obj.qty) {
+                    const weight = obj.product_variant_sku?.weight_oz;
+                    total = weight ? weight * obj.qty : null;
+                }
+
+                return total;
+            })(cartItem);
+        });
+
+        return data;
+    }
+
+
     getValidationSchemaForUpdate() {
-        const schema = { ...this.dao.schema };
+        const schema = { ...this.model.schema };
 
         return {
             id: schema.id.required(),

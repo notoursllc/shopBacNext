@@ -1,11 +1,10 @@
-import Joi from 'joi';
-import MasterTypeDao from '../db/dao/MasterTypeDao.js';
+import MasterTypeModel from '../models/MasterTypeModel.js';
 import BaseService from './BaseService.js';
 
 export default class MasterTypeService extends BaseService {
 
     constructor() {
-        super(new MasterTypeDao());
+        super(new MasterTypeModel());
     }
 
 

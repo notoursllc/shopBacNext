@@ -1,8 +1,8 @@
 import Joi from 'joi';
-import BaseDao from '../BaseDao.js';
+import BaseModel from '../BaseModel.js';
 
 
-export default class ProductAccentMessageDao extends BaseDao {
+export default class ProductAccentMessageModel extends BaseModel {
 
     constructor() {
         super();

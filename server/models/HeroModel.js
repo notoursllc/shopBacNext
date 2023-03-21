@@ -1,8 +1,8 @@
 import Joi from 'joi';
-import BaseDao from './BaseDao.js';
+import BaseModel from './BaseModel.js';
 
 
-export default class HeroDao extends BaseDao {
+export default class HeroModel extends BaseModel {
 
     constructor() {
         super();
@@ -11,7 +11,7 @@ export default class HeroDao extends BaseDao {
         this.schema = {
             id: Joi.string().uuid().allow(null),
             tenant_id: Joi.string().uuid(),
-            published: Joi.boolean().default(true),
+            published: Joi.boolean(),
             title: Joi.string(),
             caption: Joi.string(),
             ordinal: Joi.number().integer().min(0).allow(null),
@@ -21,6 +21,24 @@ export default class HeroDao extends BaseDao {
             created_at: Joi.date(),
             updated_at: Joi.date()
         }
+    }
+
+
+    getValidationSchemaForAdd() {
+        const schema = {
+            ...super.getValidationSchemaForAdd()
+        }
+        schema.published = schema.published.default(true);
+        return schema;
+    }
+
+
+    getValidationSchemaForUpdate() {
+        const schema = {
+            ...super.getValidationSchemaForUpdate()
+        }
+        schema.published = schema.published.default(true);
+        return schema;
     }
 
 }

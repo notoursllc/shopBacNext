@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import BaseDao from './BaseDao.js';
+import BaseModel from './BaseModel.js';
 
 function getJoiStringOrNull(strLen) {
     return Joi.alternatives().try(
@@ -9,7 +9,7 @@ function getJoiStringOrNull(strLen) {
 }
 
 
-export default class TenantDao extends BaseDao {
+export default class TenantModel extends BaseModel {
 
     constructor() {
         super();
@@ -48,10 +48,28 @@ export default class TenantDao extends BaseDao {
             ),
             default_currency: getJoiStringOrNull(),
             order_details_page_url: getJoiStringOrNull(250),
-            active: Joi.boolean().default(true),
+            active: Joi.boolean(),
             created_at: Joi.date(),
             updated_at: Joi.date()
         }
+    }
+
+
+    getValidationSchemaForAdd() {
+        const schema = {
+            ...super.getValidationSchemaForAdd()
+        }
+        schema.active = schema.active.default(true);
+        return schema;
+    }
+
+
+    getValidationSchemaForUpdate() {
+        const schema = {
+            ...super.getValidationSchemaForUpdate()
+        }
+        schema.active = schema.active.default(true);
+        return schema;
     }
 
 }

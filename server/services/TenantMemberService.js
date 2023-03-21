@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs';
-import TenantMemberDao from '../db/dao/TenantMemberDao.js';
+import TenantMemberModel from '../models/TenantMemberModel.js';
 import BaseService from './BaseService.js';
 
 export default class TenantMemberService extends BaseService {
 
     constructor() {
-        super(new TenantMemberDao());
+        super(new TenantMemberModel());
     }
 
 
@@ -24,7 +24,7 @@ export default class TenantMemberService extends BaseService {
         const TenantMember = await this.fetchOne({
             knex: knex,
             where: { email: email, active: true },
-            columns: this.dao.getAllColumns(true)
+            columns: this.model.getAllColumns(true)
         });
 
         if(!TenantMember || !bcrypt.compareSync(password, TenantMember.password)) {

@@ -1,11 +1,11 @@
-import ExchangeRateDao from '../../db/dao/ExchangeRateDao.js';
+import ExchangeRateModel from '../../models/ExchangeRateModel.js';
 import BaseService from '../BaseService.js';
 import { getLatestOpenExchangeRates } from './OpenExchangeRatesService.js';
 
 export default class ExchangeRateService extends BaseService {
 
     constructor() {
-        super(new ExchangeRateDao());
+        super(new ExchangeRateModel());
     }
 
 
@@ -22,7 +22,7 @@ export default class ExchangeRateService extends BaseService {
         // Right now I dont see the value in keeping historical data
         // about every exchange rate as long as the exchange rate used is persisted in the cart
         try {
-            await this.dao.del({
+            await this.del({
                 knex: knex,
                 where: { id: 1 }
             });
@@ -31,7 +31,7 @@ export default class ExchangeRateService extends BaseService {
             // drop the error
         }
 
-        return this.dao.create({
+        return this.create({
             knex: knex,
             data:  {
                 id: 1,

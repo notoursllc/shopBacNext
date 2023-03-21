@@ -16,7 +16,7 @@ export default class TenantKnexManager {
     * exist in the cache for the tenant
     */
     getKnexForTenant(tenantId) {
-        global.logger.info("getKnexForTenant", {
+        global.logger.info("REQUEST: getKnexForTenant", {
             meta: { 'tenant id': tenantId }
         });
 
@@ -28,6 +28,7 @@ export default class TenantKnexManager {
 
         if (!_knex) {
             _knex = Knex(this.knexConfigForTenant(tenantId));
+
             this.knexCache.set(tenantId, _knex);
         }
 
@@ -68,6 +69,12 @@ export default class TenantKnexManager {
     * @returns {} knex config
     */
     knexConfigForTenant(tenantId) {
+        global.logger.info('REQUEST: knexConfigForTenant', {
+            meta: {
+                'tenantId':tenantId
+            }
+        });
+
         const knexConfig = {
             ...config,
             pool: {
@@ -95,9 +102,9 @@ export default class TenantKnexManager {
         knexConfig.connection.user = tenantId === process.env.TENANT_ID_BYPASSRLS ? process.env.DB_APPUSER_BYPASSRLS : process.env.DB_APPUSER;
         knexConfig.connection.password = tenantId === process.env.TENANT_ID_BYPASSRLS ? process.env.DB_APPUSER_BYPASSRLS_PASSWORD : process.env.DB_APPUSER_PASSWORD;
 
-        global.logger.info('knexConfigForTenant', {
+        global.logger.info('RESPONSE: knexConfigForTenant', {
             meta: {
-                'db user': knexConfig.connection.user
+                'DB role': knexConfig.connection.user
             }
         });
 

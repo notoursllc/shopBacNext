@@ -1,7 +1,7 @@
 import Joi from 'joi';
-import BaseDao from '../BaseDao.js';
+import BaseModel from '../BaseModel.js';
 
-export default class ProductCollectionDao extends BaseDao {
+export default class ProductCollectionModel extends BaseModel {
 
     constructor() {
         super();

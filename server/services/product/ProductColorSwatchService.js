@@ -1,11 +1,11 @@
 
 import BaseService from '../BaseService.js';
-import ProductColorSwatchDao from '../../db/dao/product/ProductColorSwatchDao.js';
+import ProductColorSwatchModel from '../../models/product/ProductColorSwatchModel.js';
 
 export default class ProductColorSwatchService extends BaseService {
 
     constructor() {
-        super(new ProductColorSwatchDao());
+        super(new ProductColorSwatchModel());
     }
 
 

@@ -1,5 +1,5 @@
 import BaseService from '../BaseService.js';
-import ProductVariantSkuDao from '../../db/dao/product/ProductVariantSkuDao.js';
+import ProductVariantSkuModel from '../../models/product/ProductVariantSkuModel.js';
 import { makeArray } from '../../utils/index.js';
 import StripeService from '../StripeService.js';
 
@@ -7,7 +7,7 @@ import StripeService from '../StripeService.js';
 export default class ProductVariantSkuService extends BaseService {
 
     constructor() {
-        super(new ProductVariantSkuDao());
+        super(new ProductVariantSkuModel());
         this.StripeService = new StripeService();
     }
 
@@ -25,7 +25,7 @@ export default class ProductVariantSkuService extends BaseService {
         );
 
         if(stripePrice) {
-            return this.dao.update({
+            return this.update({
                 knex: knex,
                 data: {
                     stripe_price_id: stripePrice.id,
@@ -36,19 +36,19 @@ export default class ProductVariantSkuService extends BaseService {
         }
     }
 
-    async create(knex, data, Product) {
-        global.logger.info('REQUEST: ProductVariantSkuService.create', {
+    async createSku(knex, data, Product) {
+        global.logger.info('REQUEST: ProductVariantSkuService.createSku', {
             meta: data
         });
 
-        const Sku = await this.dao.create({
+        const Sku = await this.create({
             knex: knex,
             data: data
         });
 
         const UpdatedSku = await this.createStripePrice(knex, Sku, Product);
 
-        global.logger.info('RESPONSE: ProductVariantSkuService.create', {
+        global.logger.info('RESPONSE: ProductVariantSkuService.createSku', {
             meta: UpdatedSku
         });
 
@@ -56,8 +56,8 @@ export default class ProductVariantSkuService extends BaseService {
     }
 
 
-    async update(knex, data, Product) {
-        global.logger.info('REQUEST: ProductVariantSkuService.update', {
+    async updateSku(knex, data, Product) {
+        global.logger.info('REQUEST: ProductVariantSkuService.updateSku', {
             meta: data
         });
 
@@ -66,7 +66,7 @@ export default class ProductVariantSkuService extends BaseService {
             where: { id: data.id }
         });
 
-        let UpdatedSku = await this.dao.update({
+        let UpdatedSku = await this.update({
             knex: knex,
             data: data,
             where: { id: data.id }
@@ -106,7 +106,7 @@ export default class ProductVariantSkuService extends BaseService {
             UpdatedSku = await this.createStripePrice(knex, UpdatedSku, Product);
         }
 
-        global.logger.info('RESPONSE: ProductVariantSkuService.update', {
+        global.logger.info('RESPONSE: ProductVariantSkuService.updateSku', {
             meta: UpdatedSku
         });
 
@@ -120,7 +120,7 @@ export default class ProductVariantSkuService extends BaseService {
         if(Array.isArray(skus)) {
             skus.forEach((sku) => {
                 promises.push(
-                    sku.id ? this.update(knex, sku, Product) : this.create(knex, sku, Product)
+                    sku.id ? this.updateSku(knex, sku, Product) : this.createSku(knex, sku, Product)
                 );
             });
         }
@@ -137,7 +137,7 @@ export default class ProductVariantSkuService extends BaseService {
      * @param {*} knex
      * @param {*} id
      */
-    async del(knex, id) {
+    async deleteSku(knex, id) {
         global.logger.info('REQUEST: ProductVariantSkuService.del', {
             meta: { id }
         });
@@ -163,7 +163,7 @@ export default class ProductVariantSkuService extends BaseService {
             }
 
             promises.push(
-                this.dao.del({
+                this.del({
                     knex: knex,
                     where: { id: id }
                 })
@@ -179,7 +179,7 @@ export default class ProductVariantSkuService extends BaseService {
             meta: { product_variant_id }
         });
 
-        const skus = await this.dao.search({
+        const skus = await this.search({
             knex: knex,
             where: { product_variant_id: product_variant_id },
             paginate: false
@@ -189,7 +189,7 @@ export default class ProductVariantSkuService extends BaseService {
 
         makeArray(skus).forEach((sku) => {
             promises.push(
-                this.del(knex, sku.id)
+                this.deleteSku(knex, sku.id)
             )
         });
 
@@ -218,12 +218,12 @@ export default class ProductVariantSkuService extends BaseService {
         if(variantIds.length) {
             // Get all skus for the collection of variants
             const skus = await knex
-                .select(this.dao.getAllColumns())
-                .from(this.dao.tableName)
+                .select(this.model.getAllColumns())
+                .from(this.model.tableName)
                 .whereIn('product_variant_id', variantIds)
                 .whereNull('deleted_at');
 
-            this.dao.addVirtuals(skus);
+            this.addVirtuals(skus);
 
             skus.forEach(sku => {
                 if(!Array.isArray(variantMap[sku.product_variant_id].skus)) {
@@ -232,6 +232,21 @@ export default class ProductVariantSkuService extends BaseService {
                 variantMap[sku.product_variant_id].skus.push(sku);
             });
         }
+    }
+
+
+    addVirtuals(data) {
+        makeArray(data).forEach((sku) => {
+            sku.display_price = (function(s) {
+                if(s.is_on_sale && s.sale_price !== null) {
+                    return s.sale_price;
+                }
+
+                return s.base_price;
+            })(sku);
+        });
+
+        return data;
     }
 
 

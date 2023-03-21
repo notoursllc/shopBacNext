@@ -74,7 +74,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return PackageTypeCtrl.updateByIdHandler(request, h);
+                    return PackageTypeCtrl.upsertHandler(request, h);
                 }
             }
         },

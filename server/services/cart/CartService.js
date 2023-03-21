@@ -1,18 +1,17 @@
 import isObject from 'lodash.isobject';
 import BaseService from '../BaseService.js';
-import CartDao from '../../db/dao/cart/CartDao.js';
+import CartModel from '../../models/cart/CartModel.js';
 import CartItemService from './CartItemService.js';
 import StripeService from '../StripeService.js';
 import TenantService from '../TenantService.js';
 import { sendEmail, compileMjmlTemplate } from '../email/EmailService.js';
-import { substringOnWords, formatPrice } from '../../utils/index.js';
-
+import { substringOnWords, formatPrice, makeArray } from '../../utils/index.js';
 
 export default class CartService extends BaseService {
 
     constructor() {
-        super(new CartDao());
-        this.CartItemService = new CartItemService();
+        super(new CartModel());
+
         this.StripeService = new StripeService();
         this.TenantService = new TenantService();
     }
@@ -352,7 +351,29 @@ export default class CartService extends BaseService {
 
 
     addRelations(knex, carts) {
-        return this.CartItemService.addRelationToCarts(knex, carts)
+        const CartItemSvc = new CartItemService();
+        return CartItemSvc.addRelationToCarts(knex, carts);
+    }
+
+
+    addVirtuals(data) {
+        makeArray(data).forEach((cart) => {
+            cart.shipping_fullName = (function(obj) {
+                let val = [];
+
+                if(obj.shipping_firstName) {
+                    val.push(obj.shipping_firstName);
+                }
+
+                if(obj.shipping_lastName) {
+                    val.push(obj.shipping_lastName);
+                }
+
+                return val.join(' ');
+            })(cart);
+        });
+
+        return data;
     }
 
 
@@ -401,25 +422,24 @@ export default class CartService extends BaseService {
     }
 
 
-
-
     // getValidationSchemaForAdd() {
-    //     const schema = { ...super.getValidationSchemaForAdd() };
-    //     schema.message = schema.message.required();
-
-    //     return schema;
+    //     return {
+    //         ...super.getValidationSchemaForAdd(),
+    //         billing_same_as_shipping: schema.billing_same_as_shipping.default(true)
+    //     }
     // }
 
 
-    // getValidationSchemaForUpdate() {
-    //     const schema = { ...super.getValidationSchemaForUpdate() };
-    //     schema.message = schema.message.required();
-
-    //     return schema;
-    // }
+    getValidationSchemaForUpdate() {
+        const schema = {
+            ...super.getValidationSchemaForUpdate()
+        }
+        schema.billing_same_as_shipping = schema.billing_same_as_shipping.default(true);
+        return schema;
+    }
 
     getValidationSchemaForShippingAddress() {
-        return this.dao.shippingAddressSchema;
+        return this.model.shippingAddressSchema;
     }
 
 }

@@ -1,5 +1,5 @@
 import BaseService from '../BaseService.js';
-import CartRefundDao from '../../db/dao/cart/CartRefundDao.js';
+import CartRefundModel from '../../models/cart/CartRefundModel.js';
 import StripeService from '../StripeService.js';
 // import TenantService from '../TenantService.js';
 import CartService from './CartService.js';
@@ -8,7 +8,7 @@ import CartService from './CartService.js';
 export default class CartRefundService extends BaseService {
 
     constructor() {
-        super(new CartRefundDao());
+        super(new CartRefundModel());
         this.StripeService = new StripeService();
         // this.TenantService = new TenantService();
         this.CartService = new CartService();
@@ -23,7 +23,7 @@ export default class CartRefundService extends BaseService {
         const results = await knex
             .select('cart_id')
             .sum({ total: 'total_refund' })
-            .from(this.dao.tableName)
+            .from(this.model.tableName)
             .where('cart_id', cart_id)
             .groupBy('cart_id');
 
@@ -105,7 +105,7 @@ export default class CartRefundService extends BaseService {
     getValidationSchemaForAdd() {
         const schema = {
             ...super.getValidationSchemaForAdd(),
-            cart_id: this.dao.schema.cart_id.required()
+            cart_id: this.model.schema.cart_id.required()
         };
         delete schema.stripe_refund_id;
         return schema;
@@ -115,7 +115,7 @@ export default class CartRefundService extends BaseService {
     getValidationSchemaForUpdate() {
         const schema = {
             ...super.getValidationSchemaForUpdate(),
-            cart_id: this.dao.schema.cart_id.required()
+            cart_id: this.model.schema.cart_id.required()
         };
         delete schema.stripe_refund_id;
         return schema;
@@ -124,7 +124,7 @@ export default class CartRefundService extends BaseService {
 
     getValidationSchemaForRefundSummary() {
         return {
-            cart_id: this.dao.schema.cart_id.required()
+            cart_id: this.model.schema.cart_id.required()
         }
     }
 

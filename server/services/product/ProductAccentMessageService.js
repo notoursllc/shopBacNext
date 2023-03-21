@@ -1,11 +1,11 @@
 
 import BaseService from '../BaseService.js';
-import ProductAccentMessageDao from '../../db/dao/product/ProductAccentMessageDao.js';
+import ProductAccentMessageModel from '../../models/product/ProductAccentMessageModel.js';
 
 export default class ProductAccentMessageService extends BaseService {
 
     constructor() {
-        super(new ProductAccentMessageDao());
+        super(new ProductAccentMessageModel());
     }
 
 

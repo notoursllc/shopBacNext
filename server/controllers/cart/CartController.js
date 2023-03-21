@@ -25,8 +25,6 @@ export default class CartController extends BaseController {
                 meta: request.payload
             });
 
-            // const tenantId = this.getTenantIdFromAuth(request);
-
             // convert the cart shipping params names to respective params for ShipEngine
             // NOTE: Address validation is not 100% reliable.
             // Therefore we should only continue with this transaction if

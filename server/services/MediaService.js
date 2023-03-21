@@ -1,12 +1,12 @@
 import Joi from 'joi';
-import MediaDao from '../db/dao/MediaDao.js';
+import MediaModel from '../models/MediaModel.js';
 import BaseService from './BaseService.js';
 import BunnyAPI from './BunnyAPI.js';
 
 export default class MediaService extends BaseService {
 
     constructor() {
-        super(new MediaDao());
+        super(new MediaModel());
     }
 
 
@@ -25,7 +25,7 @@ export default class MediaService extends BaseService {
         delete payload.file;
         payload.resource_type = 'IMAGE';
 
-        return this.dao.create({
+        return this.create({
             knex: knex,
             data: payload
         });
@@ -42,7 +42,7 @@ export default class MediaService extends BaseService {
             await BunnyAPI.storage.del(currentMedia.url);
         }
 
-        return this.dao.del({
+        return this.del({
             knex: knex,
             where: { id }
         });
@@ -66,7 +66,7 @@ export default class MediaService extends BaseService {
         delete payload.file;
         payload.resource_type = 'VIDEO';
 
-        const res = this.dao.create({
+        const res = this.create({
             knex: knex,
             data: payload
         });
@@ -86,7 +86,7 @@ export default class MediaService extends BaseService {
             await BunnyAPI.video.del(currentMedia.third_party_id);
         }
 
-        return this.dao.del({
+        return this.del({
             knex: knex,
             where: { id }
         });

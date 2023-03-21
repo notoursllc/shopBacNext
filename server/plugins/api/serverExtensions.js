@@ -56,7 +56,7 @@ export default (server) => {
             const tenantMember = await TenantMemberSvc.fetchOne({
                 knex: knex,
                 where: { id: session.id },
-                columns: TenantMemberSvc.dao.getAllColumns(true)
+                columns: TenantMemberSvc.model.getAllColumns(true)
             });
 
             global.logger.info('Cookie validate', {

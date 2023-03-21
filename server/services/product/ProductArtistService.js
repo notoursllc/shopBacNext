@@ -1,13 +1,13 @@
 
 import Joi from 'joi';
 import BaseService from '../BaseService.js';
-import ProductArtistDao from '../../db/dao/product/ProductArtistDao.js';
+import ProductArtistModel from '../../models/product/ProductArtistModel.js';
 import BunnyAPI from '../BunnyAPI.js';
 
 export default class ProductService extends BaseService {
 
     constructor() {
-        super(new ProductArtistDao());
+        super(new ProductArtistModel());
     }
 
 
@@ -40,10 +40,10 @@ export default class ProductService extends BaseService {
      * @returns []
      */
     async addRelationToProducts(knex, products) {
-        await this.dao.addRelations(
+        await this.setRelations(
             products,
             'product_artist_id',
-            knex.select(this.dao.getAllColumns()).from(this.dao.tableName).whereNull('deleted_at'),
+            knex.select(this.model.getAllColumns()).from(this.model.tableName).whereNull('deleted_at'),
             'id',
             'artist',
             true

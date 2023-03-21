@@ -1,14 +1,15 @@
 import Joi from 'joi';
 import cloneDeep from 'lodash.clonedeep';
 import BaseService from '../BaseService.js';
-import ProductDao from '../../db/dao/product/ProductDao.js';
+import ProductModel from '../../models/product/ProductModel.js';
 import ProductArtistService from './ProductArtistService.js';
 import ProductVariantService from './ProductVariantService.js';
+import { makeArray } from '../../utils/index.js';
 
 export default class ProductService extends BaseService {
 
     constructor() {
-        super(new ProductDao());
+        super(new ProductModel());
         this.ProductArtistService = new ProductArtistService();
         this.ProductVariantService = new ProductVariantService();
     }
@@ -42,9 +43,33 @@ export default class ProductService extends BaseService {
     }
 
 
+    addVirtuals(products) {
+        makeArray(products).forEach((prod) => {
+            // packing_volume_cm
+            prod.packing_volume_cm = (prod.packing_length_cm || 0)
+                * (prod.packing_width_cm || 0)
+                * (prod.packing_height_cm || 0);
+
+            // total_inventory_count
+            prod.total_inventory_count = (function(p) {
+                let totalCount = 0;
+
+                // https://bookshelfjs.org/api.html#Collection-instance-toArray
+                makeArray(p.variants).forEach((obj) => {
+                    totalCount += obj.total_inventory_count || 0;
+                })
+
+                return totalCount;
+            })(prod);
+        });
+
+        return products;
+    }
+
+
     addRelations(knex, products) {
         return Promise.all([
-            this.ProductVariantService.addRelationToProducts(knex, products),
+            this.ProductVariantService.addVariantsRelationToProducts(knex, products),
             this.ProductArtistService.addRelationToProducts(knex, products)
         ]);
     }
@@ -82,11 +107,9 @@ export default class ProductService extends BaseService {
 
 
     getValidationSchemaForSearch() {
-        const productSchema = this.dao.schema
-
         return {
-            published: productSchema.published,
-            sub_type: productSchema.sub_type,
+            published: this.model.schema.published,
+            sub_type: this.model.schema.sub_type,
             ...this.getValidationSchemaForPagination()
         };
     }

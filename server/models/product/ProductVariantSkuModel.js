@@ -1,8 +1,8 @@
 import Joi from 'joi';
-import BaseDao from '../BaseDao.js';
-import { makeArray } from '../../../utils/index.js';
+import BaseModel from '../BaseModel.js';
 
-export default class ProductVariantSkuDao extends BaseDao {
+
+export default class ProductVariantSkuModel extends BaseModel {
 
     constructor() {
         super();
@@ -61,9 +61,9 @@ export default class ProductVariantSkuDao extends BaseDao {
             ),
 
             // INVENTORY
-            inventory_count: Joi.number().integer().min(0).empty('').default(0),
-            track_inventory_count: Joi.boolean().empty('').default(true),
-            visible_if_no_inventory: Joi.boolean().empty('').default(true),
+            inventory_count: Joi.number().integer().min(0).empty(''),
+            track_inventory_count: Joi.boolean().empty(''),
+            visible_if_no_inventory: Joi.boolean().empty(''),
             product_variant_id: Joi.string().uuid(),
 
             // STRIPE
@@ -78,18 +78,25 @@ export default class ProductVariantSkuDao extends BaseDao {
     }
 
 
-    addVirtuals(data) {
-        makeArray(data).forEach((sku) => {
-            sku.display_price = (function(s) {
-                if(s.is_on_sale && s.sale_price !== null) {
-                    return s.sale_price;
-                }
+    getValidationSchemaForAdd() {
+        const schema = {
+            ...super.getValidationSchemaForAdd()
+        }
+        schema.inventory_count = schema.inventory_count.default(0);
+        schema.track_inventory_count = schema.track_inventory_count.default(true);
+        schema.visible_if_no_inventory = schema.visible_if_no_inventory.default(true);
+        return schema;
+    }
 
-                return s.base_price;
-            })(sku);
-        });
 
-        return data;
+    getValidationSchemaForUpdate() {
+        const schema = {
+            ...super.getValidationSchemaForUpdate()
+        }
+        schema.inventory_count = schema.inventory_count.default(0);
+        schema.track_inventory_count = schema.track_inventory_count.default(true);
+        schema.visible_if_no_inventory = schema.visible_if_no_inventory.default(true);
+        return schema;
     }
 
 }

@@ -1,11 +1,11 @@
 import Joi from 'joi';
-import PackageTypeDao from '../db/dao/PackageTypeDao.js';
+import PackageTypeModel from '../models/PackageTypeModel.js';
 import BaseService from './BaseService.js';
 
 export default class PackageTypeService extends BaseService {
 
     constructor() {
-        super(new PackageTypeDao());
+        super(new PackageTypeModel());
     }
 
 

@@ -73,7 +73,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return MasterTypeCtrl.updateByIdHandler(request, h);
+                    return MasterTypeCtrl.upsertHandler(request, h);
                 }
             }
         },

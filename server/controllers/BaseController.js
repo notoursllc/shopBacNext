@@ -40,10 +40,6 @@ export default class BaseController {
                 where: { id: request.query.id }
             });
 
-            // if(!response) {
-            //     throw Boom.notFound();
-            // }
-
             global.logger.info(`RESPONSE: ${this.getControllerName()}.getByIdHandler`, {
                 meta: response
             });
@@ -68,35 +64,12 @@ export default class BaseController {
                 await this.throwIfNotFound(request.knex, request.payload.id);
             }
 
-            const response = await this.service.upsertOne(request.knex, request.payload);
+            const response = await this.service.upsertOne({
+                knex: request.knex,
+                data: request.payload
+            });
 
             global.logger.info(`RESPONSE: ${this.getControllerName()}.upsertHandler`, {
-                meta: response
-            });
-
-            return h.apiSuccess(response);
-        }
-        catch(err) {
-            global.logger.error(err);
-            global.bugsnag(err);
-            throw Boom.badRequest(err);
-        }
-    }
-
-
-    async updateByIdHandler(request, h) {
-        try {
-            global.logger.info(`REQUEST: ${this.getControllerName()}.updateHandler`, {
-                meta: request.payload
-            });
-
-            const response = await this.service.dao.update({
-                knex: request.knex,
-                where: { id: request.payload.id },
-                data: request.payload,
-            });
-
-            global.logger.info(`RESPONSE: ${this.getControllerName()}.updateHandler`, {
                 meta: response
             });
 
@@ -179,7 +152,7 @@ export default class BaseController {
 
             ordinals.forEach((obj) => {
                 promises.push(
-                    this.service.dao.update({
+                    this.service.update({
                         knex: request.knex,
                         where: { id: obj.id },
                         data: { ordinal: obj.ordinal },

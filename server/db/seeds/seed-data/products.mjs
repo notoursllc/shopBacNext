@@ -163,7 +163,6 @@ async function seed(knex) {
             products = products.map(arr => arr[0])
 
             const productVariants = await seedProductVariants(products);
-            console.log("productVariants", productVariants)
 
             await seedProductVariantSkus(productVariants);
 

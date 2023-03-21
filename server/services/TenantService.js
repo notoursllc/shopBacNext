@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import isObject from 'lodash.isobject';
-import TenantDao from '../db/dao/TenantDao.js';
+import TenantModel from '../models/TenantModel.js';
 import TenantKnexManager from '../db/utils/TenantKnexManager.js';
 import ExchangeRateService from './exchange_rate/ExchangeRateService.js';
 import BaseService from './BaseService.js';
@@ -11,7 +11,7 @@ import { sendEmail, compileMjmlTemplate } from './email/EmailService.js';
 export default class TenantService extends BaseService {
 
     constructor() {
-        super(new TenantDao());
+        super(new TenantModel());
         this.ExchangeRateService = new ExchangeRateService();
         this.TenantKnexManager = new TenantKnexManager();
     }
@@ -26,7 +26,7 @@ export default class TenantService extends BaseService {
     async getSupportedCurrenyRates(knex) {
         const result = await Promise.all([
             this.ExchangeRateService.fetchRate(knex),
-            this.dao.fetchOne({
+            this.fetchOne({
                 knex: knex,
                 where: { id: knex.userParams.tenant_id }
             })
@@ -92,7 +92,7 @@ export default class TenantService extends BaseService {
             }
         }
 
-        return this.dao.update({
+        return this.update({
             knex: knex,
             where: { id },
             data: data,
@@ -103,7 +103,7 @@ export default class TenantService extends BaseService {
     async updateApiKey(knex, id) {
         const tokens = this.generateToken();
 
-        const response = this.dao.update({
+        const response = this.update({
             knex: knex,
             where: { id },
             data: { auth_password: tokens.hashedToken }
@@ -115,7 +115,7 @@ export default class TenantService extends BaseService {
 
 
     async removeApiKey(knex, id) {
-        return this.dao.update({
+        return this.update({
             knex: knex,
             where: { id },
             data: { auth_password: null }
@@ -241,7 +241,7 @@ export default class TenantService extends BaseService {
 
 
     getAccountSchema() {
-        const schemaCopy = { ...this.dao.schema };
+        const schemaCopy = { ...this.model.schema };
 
         const blacklist = [
             'id',

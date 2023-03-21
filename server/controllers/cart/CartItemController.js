@@ -17,7 +17,7 @@ export default class CartItemController extends BaseController {
                 meta: request.payload
             });
 
-            const Cart = await this.service.create(request.knex, request.payload);
+            const Cart = await this.service.createCartItem(request.knex, request.payload);
 
             global.logger.info('RESPONSE: CartItemController.createHandler', {
                 meta: Cart
@@ -39,7 +39,7 @@ export default class CartItemController extends BaseController {
                 meta: request.payload
             });
 
-            const Cart = await this.service.update(
+            const Cart = await this.service.updateCartItem(
                 request.knex,
                 request.payload.id,
                 request.payload.qty
@@ -65,7 +65,7 @@ export default class CartItemController extends BaseController {
                 meta: request.payload
             });
 
-            const Cart = await this.service.del(request.knex, request.payload.id);
+            const Cart = await this.service.deleteCartItem(request.knex, request.payload.id);
 
             global.logger.info('RESPONSE: CartItemController.deleteHandler', {
                 meta: Cart
