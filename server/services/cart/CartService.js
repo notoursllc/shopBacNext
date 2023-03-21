@@ -1,4 +1,5 @@
 import isObject from 'lodash.isobject';
+import isString from 'lodash.isstring';
 import BaseService from '../BaseService.js';
 import CartModel from '../../models/cart/CartModel.js';
 import CartItemService from './CartItemService.js';
@@ -6,6 +7,22 @@ import StripeService from '../StripeService.js';
 import TenantService from '../TenantService.js';
 import { sendEmail, compileMjmlTemplate } from '../email/EmailService.js';
 import { substringOnWords, formatPrice, makeArray } from '../../utils/index.js';
+
+
+function makeFullName(firstName, lastName) {
+    let val = [];
+
+    if(isString(firstName)) {
+        val.push(firstName.trim());
+    }
+
+    if(isString(lastName)) {
+        val.push(lastName.trim());
+    }
+
+    return val.join(' ');
+}
+
 
 export default class CartService extends BaseService {
 
@@ -358,18 +375,101 @@ export default class CartService extends BaseService {
 
     addVirtuals(data) {
         makeArray(data).forEach((cart) => {
+            // num_items
+            cart.num_items = (function(obj) {
+                let numItems = 0;
+
+                makeArray(obj.cart_items).forEach((model) => {
+                    numItems += parseInt(model.qty || 0, 10);
+                });
+
+                return numItems;
+            })(cart);
+
+            // weight_oz_total
+            cart.weight_oz_total = (function(obj) {
+                let weight = 0;
+
+                makeArray(obj.cart_items).forEach((model) => {
+                    weight += model.item_weight_total || 0;
+                });
+
+                return weight;
+            })(cart);
+
+            // sub_total
+            cart.sub_total = (function(obj) {
+                let subtotal = 0;
+
+                makeArray(obj.cart_items).forEach((model) => {
+                    subtotal += model.item_price_total || 0;
+                });
+
+                return subtotal;
+            })(cart);
+
+            // shipping_total
+            cart.shipping_total = (function(obj) {
+                const selectedRate = obj.selected_shipping_rate;
+                let total = 0;
+
+                if(isObject(selectedRate)) {
+                    total += selectedRate.shipping_amount?.amount ? selectedRate.shipping_amount.amount * 100 : 0;
+                    total += selectedRate.other_amount?.amount ? selectedRate.other_amount.amount * 100 : 0;
+                    total += selectedRate.insurance_amount?.amount ? selectedRate.insurance_amount.amount * 100 : 0;
+                    total += selectedRate.confirmation_amount?.amount ? selectedRate.confirmation_amount.amount * 100 : 0;
+                }
+
+                return total;
+            })(cart);
+
+            // grand_total
+            cart.grand_total = (function(obj) {
+                return (obj.sub_total || 0) + (obj.sales_tax || 0) + (obj.shipping_total || 0);
+            })(cart);
+
+            // tax_rate
+            cart.tax_rate = (function(obj) {
+                const salesTax = obj.sales_tax || 0;
+                const grandTotal = obj.grand_total;
+
+                if(!salesTax || !grandTotal) {
+                    return null;
+                }
+
+                const preTaxGrandTotal = grandTotal - salesTax;
+                return (salesTax / preTaxGrandTotal).toFixed(5);
+            })(cart);
+
+            // shipping_fullName
             cart.shipping_fullName = (function(obj) {
-                let val = [];
+                return makeFullName(obj.shipping_firstName, obj.shipping_lastName)
+            })(cart);
 
-                if(obj.shipping_firstName) {
-                    val.push(obj.shipping_firstName);
+            // billing_fullName
+            cart.billing_fullName = (function(obj) {
+                if(obj.billing_same_as_shipping) {
+                    return obj.shipping_fullName;
                 }
 
-                if(obj.shipping_lastName) {
-                    val.push(obj.shipping_lastName);
-                }
+                return makeFullName(obj.billing_firstName, obj.billing_lastName)
+            })(cart);
 
-                return val.join(' ');
+            // billing_address
+            cart.billing_address = (function(obj) {
+                const prefix = obj.billing_same_as_shipping ? 'shipping' : 'billing';
+
+                return {
+                    firstName: obj[`${prefix}_firstName`],
+                    lastName: obj[`${prefix}_lastName`],
+                    streetAddress: obj[`${prefix}_streetAddress`],
+                    extendedAddress: obj[`${prefix}_extendedAddress`],
+                    city: obj[`${prefix}_city`],
+                    state: obj[`${prefix}_state`],
+                    postalCode: obj[`${prefix}_postalCode`],
+                    countryCodeAlpha2: obj[`${prefix}_countryCodeAlpha2`],
+                    phone: obj[`${prefix}_phone`]
+                }
             })(cart);
         });
 
