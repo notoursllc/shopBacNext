@@ -3,8 +3,9 @@ import isString from 'lodash.isstring';
 import BaseService from '../BaseService.js';
 import CartModel from '../../models/cart/CartModel.js';
 import CartItemService from './CartItemService.js';
-import StripeService from '../StripeService.js';
+import StripeApi from '../StripeApi.js';
 import TenantService from '../TenantService.js';
+import ShipEngineApi from '../shipEngine/ShipEngineApi.js'
 import { sendEmail, compileMjmlTemplate } from '../email/EmailService.js';
 import { substringOnWords, formatPrice, makeArray } from '../../utils/index.js';
 
@@ -28,8 +29,6 @@ export default class CartService extends BaseService {
 
     constructor() {
         super(new CartModel());
-
-        this.StripeService = new StripeService();
         this.TenantService = new TenantService();
     }
 
@@ -103,7 +102,7 @@ export default class CartService extends BaseService {
 
 
     async getPayment(knex, stripe_payment_intent_id) {
-        global.logger.info('REQUEST: CartCtrl.getPayment', {
+        global.logger.info('REQUEST: CartService.getPayment', {
             meta: {
                 stripe_payment_intent_id
             }
@@ -121,8 +120,7 @@ export default class CartService extends BaseService {
             return paymentData;
         }
 
-        const stripe = await this.StripeService.getStripe(knex);
-        const stripePaymentIntent = await stripe.paymentIntents.retrieve(stripe_payment_intent_id);
+        const stripePaymentIntent = await StripeApi.getPaymentIntent(knex, stripe_payment_intent_id);
 
         /*
         // SAMPLE PAYMENT INTENT RESPONSE
@@ -301,7 +299,7 @@ export default class CartService extends BaseService {
             paymentData.payment_method_details = data.payment_method_details;
         }
 
-        global.logger.info('RESPONSE: CartCtrl.getPayment', {
+        global.logger.info('RESPONSE: CartService.getPayment', {
             meta: {
                 paymentData
             }
@@ -365,6 +363,164 @@ export default class CartService extends BaseService {
 
         return null;
     }
+
+
+    async setShippingRate(knex, rateId, cartId) {
+        let getRateResponse;
+
+        if(rateId) {
+            getRateResponse = await ShipEngineApi.getRate(knex, rateId);
+
+            if(!getRateResponse) {
+                throw new Error('A shipping rate for the given ID was not found')
+            }
+        }
+
+        // Update the cart with the selected_shipping_rate
+        // so the Cart.shipping_total virtual can return the rate
+        // when creating the Stripe order
+        if(getRateResponse) {
+            await this.update({
+                knex: knex,
+                where: { id: cartId },
+                data: { selected_shipping_rate: getRateResponse }
+            });
+        }
+
+        // We can create an "Order" in Stripe now that the
+        // subtotal and shipping amount are known.
+        // The Stripe order will set the sales tax amount
+        const stripeOrder = await this.createStripeOrderForCart(
+            tenantId,
+            request.payload.id
+        );
+
+        if(!stripeOrder) {
+            throw new Error('Stripe Order returned null');
+        }
+
+        return this.update({
+            knex: knex,
+            where: { id: cartId },
+            data: {
+                stripe_order_id: stripeOrder.id,
+                sales_tax: stripeOrder.total_details.amount_tax
+            }
+        });
+    }
+
+
+
+    async createStripeOrderForCart(knex, cartId) {
+        global.logger.info('REQUEST: CartService.createStripeOrderForCart', {
+            meta: { cartId }
+        });
+
+        const Cart = this.getActiveCart(knex, cartId);
+        if(!Cart) {
+            throw new Error('Cart not found');
+        }
+
+        /*
+        * NOTES 8/5/22:
+        * The 'currency' values set below must be hard-coded to 'USD'.
+        * Since Prices in stripe must be created ahead of time
+        * it doesn't seem feasable to create a Price object for each
+        * currency type (USD, EUR, GBP, etc), especially since the way
+        * I have designed it will pull the latest exchange rates periodically
+        * (potentially invalidating the Price)
+        * Is this OK, however?  Is it important from a customer perspective that
+        * the price they are billed is their own currency?  I assume it is.
+        *
+        * I am creating Prices in Stripe in order to use Stripe Tax.   I wonder
+        * if this might mean I need to switch to a service like TaxJar or Alavara that will
+        * allow for sales tax calculation on the fly (I think), thus I wouild not need
+        * to pre-create Price objects like this
+        */
+        const createConfig = {
+            // currency: Cart.currency || 'usd',
+            currency: 'usd',
+
+            // https://stripe.com/docs/api/orders_v2/create#create_order_v2-line_items
+            line_items: Cart?.cart_items.map((item) => {
+                // Note: the Stripe "Price" has the product data included in it,
+                // so there's no need to specify the 'product' in the API request.
+                // In fact, only one 'price' or 'product' argument can be sent but not both
+                return {
+                    price: item.product_variant_sku.stripe_price_id,
+                    quantity: item.qty
+                }
+            }),
+
+            payment: {
+                settings: {
+                    payment_method_types: ['card']
+                }
+            },
+
+            automatic_tax: {
+                enabled: true
+            },
+
+            // https://stripe.com/docs/api/orders_v2/create#create_order_v2-shipping_details
+            shipping_details: {
+                name: Cart.shipping_fullName,
+                address: {
+                    city: Cart.shipping_city,
+                    country: Cart.shipping_countryCodeAlpha2,
+                    line1: Cart.shipping_streetAddress,
+                    line2: Cart.shipping_extendedAddress,
+                    postal_code: Cart.shipping_postalCode,
+                    state: Cart.shipping_state
+                }
+            },
+
+            // https://stripe.com/docs/api/orders_v2/create#create_order_v2-shipping_cost
+            shipping_cost: {
+                shipping_rate_data: {
+                    display_name: 'Shipping rate',
+                    type: 'fixed_amount',
+                    fixed_amount: {
+                        amount: Cart.shipping_total,
+                        // currency: Cart.currency || 'usd'
+                        currency: 'usd'
+                    },
+                    tax_behavior: 'exclusive'
+                }
+            },
+
+            // https://stripe.com/docs/api/orders_v2/create#create_order_v2-billing_details
+            // This helps with "Risk Insights"
+            billing_details: {
+                address: {
+                    city: Cart.billing_address.city,
+                    country: Cart.billing_address.countryCodeAlpha2,
+                    line1: Cart.billing_address.streetAddress,
+                    line2: Cart.billing_address.extendedAddress,
+                    postal_code: Cart.billing_address.postalCode,
+                    state: Cart.billing_address.state
+                },
+                email: Cart.shipping_email,
+                name: Cart.billing_fullName,
+                phone: Cart.billing_same_as_shipping ? Cart.shipping_phone : Cart.billing_phone
+            },
+
+            expand: ['line_items']
+        };
+
+        global.logger.info('REQUEST: CartCtrl.createStripeOrderForCart - Stripe args', {
+            meta: createConfig
+        });
+
+        const stripeOrder = await StripeApi.createOrder(knex, createConfig);
+
+        global.logger.info('REQUEST: CartCtrl.createStripeOrderForCart - Stripe response', {
+            meta: stripeOrder
+        });
+
+        return stripeOrder;
+    }
+
 
 
     addRelations(knex, carts) {
@@ -540,6 +696,14 @@ export default class CartService extends BaseService {
 
     getValidationSchemaForShippingAddress() {
         return this.model.shippingAddressSchema;
+    }
+
+
+    getValidationSchemaForSelectShippingRate() {
+        return {
+            ...this.getValidationSchemaForId(),
+            rate_id: Joi.string().allow(null)
+        }
     }
 
 }

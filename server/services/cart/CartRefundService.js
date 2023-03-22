@@ -1,7 +1,6 @@
 import BaseService from '../BaseService.js';
 import CartRefundModel from '../../models/cart/CartRefundModel.js';
-import StripeService from '../StripeService.js';
-// import TenantService from '../TenantService.js';
+import StripeApi from '../StripeApi.js';
 import CartService from './CartService.js';
 
 
@@ -9,8 +8,6 @@ export default class CartRefundService extends BaseService {
 
     constructor() {
         super(new CartRefundModel());
-        this.StripeService = new StripeService();
-        // this.TenantService = new TenantService();
         this.CartService = new CartService();
     }
 
@@ -67,21 +64,17 @@ export default class CartRefundService extends BaseService {
         }
 
         // Process the refund via Stripe
-        const stripe = await this.StripeService.getStripe(knex);
-        const stripeArgs = {
-            payment_intent: Cart.stripe_payment_intent_id,
-            amount: refundAmount,
-            reason: ['duplicate', 'fraudulent', 'requested_by_customer'].includes(data.reason) ? data.reason : 'requested_by_customer',
-            metadata: data.description
-                ? { cart: Cart.id, refund_desc: data.description }
-                : null
-        }
-
-        global.logger.info('REQUEST: stripe.refunds.create', {
-            meta: stripeArgs
-        });
-
-        const stripeRefund = await stripe.refunds.create(stripeArgs);
+        const stripeRefund = await StripeApi.createRefund(
+            knex,
+            {
+                payment_intent: Cart.stripe_payment_intent_id,
+                amount: refundAmount,
+                reason: ['duplicate', 'fraudulent', 'requested_by_customer'].includes(data.reason) ? data.reason : 'requested_by_customer',
+                metadata: data.description
+                    ? { cart: Cart.id, refund_desc: data.description }
+                    : null
+            }
+        );
 
         global.logger.info('RESPONSE: stripe.refunds.create', {
             meta: stripeRefund

@@ -1,19 +1,18 @@
 import BaseService from '../BaseService.js';
 import ProductVariantSkuModel from '../../models/product/ProductVariantSkuModel.js';
 import { makeArray } from '../../utils/index.js';
-import StripeService from '../StripeService.js';
+import StripeApi from '../StripeApi.js';
 
 
 export default class ProductVariantSkuService extends BaseService {
 
     constructor() {
         super(new ProductVariantSkuModel());
-        this.StripeService = new StripeService();
     }
 
 
     async createStripePrice(knex, Sku, Product) {
-        const stripePrice = await this.StripeService.createPrice(
+        const stripePrice = await StripeApi.createPrice(
             knex,
             {
                 unit_amount: Sku.display_price,
@@ -100,7 +99,7 @@ export default class ProductVariantSkuService extends BaseService {
         }
 
         if(doArchive) {
-            this.StripeService.archivePrice(knex, doArchive);
+            StripeApi.archivePrice(knex, doArchive);
         }
         if(doCreate) {
             UpdatedSku = await this.createStripePrice(knex, UpdatedSku, Product);
@@ -152,13 +151,13 @@ export default class ProductVariantSkuService extends BaseService {
 
             if(Sku.stripe_price_id) {
                 promises.push(
-                    this.StripeService.archivePrice(knex, Sku.stripe_price_id)
+                    StripeApi.archivePrice(knex, Sku.stripe_price_id)
                 );
             }
 
             if(Sku.stripe_product_id) {
                 promises.push(
-                    this.StripeService.archiveProduct(knex, Sku.stripe_product_id)
+                    StripeApi.archiveProduct(knex, Sku.stripe_product_id)
                 );
             }
 

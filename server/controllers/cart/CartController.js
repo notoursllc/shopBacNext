@@ -119,4 +119,30 @@ export default class CartController extends BaseController {
     }
 
 
+    async selectShippingRateHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: CartController.selectShippingRateHandler', {
+                meta: request.payload
+            });
+
+            const Cart = await this.service.setShippingRate(
+                request.knex,
+                request.payload.rate_id,
+                request.payload.id
+            );
+
+            global.logger.info('RESPONSE: CartController.selectShippingRateHandler', {
+                meta: Cart
+            });
+
+            return h.apiSuccess(Cart);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
 }

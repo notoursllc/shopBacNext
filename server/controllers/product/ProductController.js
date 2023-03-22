@@ -1,13 +1,12 @@
 import Boom from '@hapi/boom';
 import BaseController from '../BaseController.js';
 import ProductService from '../../services/product/ProductService.js';
-import StripeService from '../../services/StripeService.js';
+import StripeApi from '../../services/StripeApi.js';
 
 export default class ProductController extends BaseController {
 
     constructor() {
         super(new ProductService());
-        this.StripeService = new StripeService();
     }
 
 
@@ -15,7 +14,7 @@ export default class ProductController extends BaseController {
         try {
             global.logger.info('REQUEST: ProductController.getStripeTaxCodesHandler', {});
 
-            const taxCodes = await this.StripeService.getTaxCodes(request.knex);
+            const taxCodes = await StripeApi.getTaxCodes(request.knex);
 
             global.logger.info('RESPONSE: ProductController.getStripeTaxCodesHandler', {
                 meta: taxCodes

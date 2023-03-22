@@ -61,6 +61,52 @@ export default (server) => {
                 }
             }
         },
+
+
+        /******************
+         * CART/ORDER
+         ******************/
+        {
+            method: 'GET',
+            path: '/cart/order',
+            options: {
+                description: 'Gets a closed cart by ID, as well as the related ShipEngine data (label)',
+                auth: {
+                    strategies: ['session']
+                },
+                validate: {
+                    query: Joi.object({
+                        ...CartCtrl.service.getValidationSchemaForId(),
+                    })
+                },
+                handler: (request, h) => {
+                    return CartCtrl.getOrderHandler(request, h);
+                }
+            }
+        },
+        {
+            method: 'POST',
+            path: '/cart/order/resend-confirmation',
+            options: {
+                description: 'Re-sends the order confirmation email for a given closed cart',
+                auth: {
+                    strategies: ['session']
+                },
+                validate: {
+                    payload: Joi.object({
+                        ...CartCtrl.service.getValidationSchemaForId(),
+                    })
+                },
+                handler: (request, h) => {
+                    return CartCtrl.resendOrderConfirmaionHandler(request, h);
+                }
+            }
+        },
+
+
+        /******************
+         * CART/SHIPPING
+         ******************/
         {
             method: 'POST',
             path: '/cart/shipping/validateAddress',
@@ -97,43 +143,117 @@ export default (server) => {
                 }
             }
         },
-
-
-        {
-            method: 'GET',
-            path: '/cart/order',
-            options: {
-                description: 'Gets a closed cart by ID, as well as the related ShipEngine data (label)',
-                auth: {
-                    strategies: ['session']
-                },
-                validate: {
-                    query: Joi.object({
-                        ...CartCtrl.service.getValidationSchemaForId(),
-                    })
-                },
-                handler: (request, h) => {
-                    return CartCtrl.getOrderHandler(request, h);
-                }
-            }
-        },
         {
             method: 'POST',
-            path: '/cart/order/resend-confirmation',
+            path: '/cart/shipping/rate',
             options: {
-                description: 'Re-sends the order confirmation email for a given closed cart',
+                description: 'Persists a selected shipping rate for the cart.',
                 auth: {
-                    strategies: ['session']
+                    strategies: ['storeauth', 'session']
                 },
                 validate: {
                     payload: Joi.object({
-                        ...CartCtrl.service.getValidationSchemaForId(),
+                        ...CartCtrl.service.getValidationSchemaForSelectShippingRate()
                     })
                 },
                 handler: (request, h) => {
-                    return CartCtrl.resendOrderConfirmaionHandler(request, h);
+                    return CartCtrl.selectShippingRateHandler(request, h);
                 }
-            }
-        }
+             }
+        },
+        // {
+        //     method: 'POST',
+        //     path: '/cart/shipping/label',
+        //     options: {
+        //         description: 'Buys a shipping label from ShipEngine',
+        //         auth: {
+        //             // strategies: ['session']
+        //         },
+        //         validate: {
+        //             payload: Joi.object({
+        //                 id: Joi.string().uuid().required(), // the cart id
+        //                 tenant_id: Joi.string().uuid().required(),
+        //             })
+        //         },
+        //         handler: (request, h) => {
+        //             return CartCtrl.buyShippingLabelForCartHandler(request, h);
+        //         }
+        //     }
+        // },
+        // {
+        //     method: 'POST',
+        //     path: '/cart/shipping/label/tracking_status',
+        //     options: {
+        //         description: 'Webhook to receive a tracking status update',
+        //         auth: false,
+        //         handler: (request, h) => {
+        //             return CartCtrl.trackingWebhookHandler(request, h);
+        //         }
+        //     }
+        // },
+
+
+        /******************
+         * PAYMENT
+         ******************/
+        // {
+        //     method: 'GET',
+        //     path: '/cart/payment',
+        //     options: {
+        //         description: 'Gets payment info for the given cart id',
+        //         auth: {
+        //             strategies: ['storeauth']
+        //         },
+        //         validate: {
+        //             query: Joi.object({
+        //                 id: Joi.string().uuid(),
+        //                 tenant_id: Joi.string().uuid(),
+        //             })
+        //         },
+        //         handler: (request, h) => {
+        //             return CartCtrl.getPaymentHandler(request, h);
+        //         }
+        //     }
+        // },
+        // {
+        //     method: 'POST',
+        //     path: '/cart/payment/intent',
+        //     options: {
+        //         description: 'Submits an order to Stripe for a given cart',
+        //         auth: {
+        //             strategies: ['storeauth', 'session']
+        //         },
+        //         validate: {
+        //             payload: Joi.object({
+        //                 id: Joi.string().uuid().required(), // cart ID
+        //                 tenant_id: Joi.string().uuid().required(),
+        //             })
+        //         },
+        //         handler: (request, h) => {
+        //             return CartCtrl.submitStripeOrderForCartHandler(request, h);
+        //         }
+        //     }
+        // },
+        // {
+        //     method: 'POST',
+        //     path: '/cart/payment',
+        //     options: {
+        //         description: 'Persist a successful payment',
+        //         auth: {
+        //             strategies: ['storeauth', 'session']
+        //         },
+        //         validate: {
+        //             payload: Joi.object({
+        //                 id: Joi.string().uuid().required(),
+        //                 tenant_id: Joi.string().uuid().required(),
+        //                 stripe_payment_intent_id: Joi.string().required()
+        //             })
+        //         },
+        //         handler: (request, h) => {
+        //             return CartCtrl.paymentSuccessHandler(request, h);
+        //         }
+        //     }
+        // }
+
     ]);
 }
