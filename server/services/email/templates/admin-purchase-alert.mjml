@@ -1,0 +1,156 @@
+<mjml>
+    <mj-head>
+        <mj-title>{{ brandName }}</mj-title>
+        <mj-font name="Roboto" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500"></mj-font>
+        <mj-attributes>
+            <mj-all font-family="Montserrat, Helvetica, Arial, sans-serif"></mj-all>
+            <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px"></mj-text>
+            <mj-section padding="0px"></mj-section>
+        </mj-attributes>
+    </mj-head>
+
+    <mj-body background-color="#F2F2F2">
+
+        <!-- logo -->
+        <mj-section padding="20px 20px 0 20px" background-color="#FFFFFF">
+            <mj-column>
+                {{#if application_logo}}
+                    <mj-image align="center" width="200px" src="{{ application_logo }}" />
+                {{/if}}
+            </mj-column>
+        </mj-section>
+
+
+        <!-- Purchase alert -->
+        <mj-section padding="10px 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text font-weight="300" font-size="26px" color="#5FA91D" align="center">
+                    Purchase alert
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+
+        <!-- Order -->
+        <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text font-size="16px">
+                    Order: &nbsp;
+                    <a href="{{ baseUrl }}/order/details/{{ id }}" target="_blank">{{ id }}</a>
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+
+        <!-- Ship to -->
+        <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text font-size="16px">Ship to:</mj-text>
+                <mj-table>
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Company:</td>
+                        <td>{{ shipping_company }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Name:</td>
+                        <td>{{ shipping_fullName }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Street address:</td>
+                        <td>{{ shipping_streetAddress }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Extended address:</td>
+                        <td>{{ shipping_extendedAddress }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">City:</td>
+                        <td>{{ shipping_city }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">State:</td>
+                        <td>{{ shipping_state }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Postal code:</td>
+                        <td>{{ shipping_postalCode }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Country:</td>
+                        <td>{{ shipping_countryCodeAlpha2 }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight:bold; padding-right:5px">Email:</td>
+                        <td>{{ shipping_email }}</td>
+                    </tr>
+                </mj-table>
+            </mj-column>
+        </mj-section>
+
+
+        <!-- Totals -->
+        <mj-section padding="10px 0 0 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-table>
+                    <tr>
+                        <td style="padding-right:10px;">Total before tax:</td>
+                        <td style="text-align:right; vertical-align:top; font-family:monospace,monospace">{{ sub_total }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-right:10px;">Shipping:</td>
+                        <td style="text-align:right; vertical-align:top; font-family:monospace,monospace">{{ shipping_total }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-right:10px;">Estimated tax:</td>
+                        <td style="text-align:right; vertical-align:top; font-family:monospace,monospace">{{ sales_tax }}</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-right:10px;">Order total:</td>
+                        <td style="text-align:right; vertical-align:top; font-family:monospace,monospace">{{ grand_total }}</td>
+                    </tr>
+                </mj-table>
+            </mj-column>
+        </mj-section>
+
+
+        <!-- divider -->
+        <mj-section padding="10px 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-divider border-width="1px" border-color="#c9c9c9"></mj-divider>
+            </mj-column>
+        </mj-section>
+
+
+        <mj-section padding="10px 0" background-color="#FFFFFF">
+            <mj-column>
+                <mj-text>
+                This email was sent from a notification-only address that cannot accept incoming email. Please do not reply to this message.
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+
+        <!-- footer -->
+        <mj-section background-color="#ECEDE8" padding="20px">
+            <mj-column>
+                <mj-text align="center" font-weight="300" font-size="26px" color="#5FA91D">Thank you!</mj-text>
+                <mj-text align="center" font-weight="600" font-size="16px" padding="0">{{ brandName }}</mj-text>
+
+                <mj-text padding="2px" align="center">
+                    <a href="{{ baseUrl }}">{{ baseUrl }}</a>
+                </mj-text>
+            </mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>

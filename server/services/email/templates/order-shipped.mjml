@@ -165,9 +165,9 @@
                 <mj-text align="center" font-weight="300" font-size="26px" color="#5FA91D">Thank you!</mj-text>
                 <mj-text align="center" font-weight="600" font-size="16px" padding="0">{{brandName}}</mj-text>
 
-                {{#if baseUrl}}
+                {{#if websiteUrl}}
                     <mj-text padding="2px" align="center">
-                        <a href="{{ baseUrl }}">{{ baseUrl }}</a>
+                        <a href="{{ websiteUrl }}">{{ websiteUrl }}</a>
                     </mj-text>
                 {{/if}}
 

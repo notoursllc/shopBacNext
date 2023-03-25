@@ -567,6 +567,18 @@ export default class BaseService {
     }
 
 
+    /**
+     * Just a convenience method to get the tenant_id value
+     * because I always forget the name of the 'userParams' object
+     *
+     * @param {*} knex
+     * @returns
+     */
+    getTenantIdFromKnex(knex) {
+        return knex.userParams.tenant_id;
+    }
+
+
     getValidationSchemaForUpdate() {
         const schemaCopy = { ...this.model.schema };
         schemaCopy.id = schemaCopy.id.required();

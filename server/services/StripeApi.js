@@ -87,6 +87,35 @@ async function createOrder(knex, data) {
 }
 
 
+async function submitOrder(knex, stripeOrderId, expectedTotal) {
+    const stripe = await getStripe(knex);
+
+    const resource = stripe.StripeResource.extend({
+        request: stripe.StripeResource.method({
+            method: 'POST',
+            path: `orders/${stripeOrderId}/submit`
+        })
+    });
+
+    const requestData = {
+        expected_total: expectedTotal,
+        expand: ['payment.payment_intent']
+    }
+
+    // Logging this so I can see the 'expected_total' arg being passed to Stripe
+    // because sometimes I get this error:
+    // "The `expected_total` you passed does not match the order's current `amount_total`. This probably means something else concurrently modified the order."
+    global.logger.info('REQUEST: StripeApi.submitOrder - stripe args', {
+        meta: {
+            stripeArgs: requestData,
+            stripe_order_id: stripeOrderId
+        }
+    });
+
+    return new resource(stripe).request(requestData);
+}
+
+
 export default {
     getTaxCodes,
     archiveProduct,
@@ -94,5 +123,6 @@ export default {
     archivePrice,
     createRefund,
     getPaymentIntent,
-    createOrder
+    createOrder,
+    submitOrder
 }

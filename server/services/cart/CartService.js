@@ -1,13 +1,18 @@
+import Joi from 'joi';
 import isObject from 'lodash.isobject';
 import isString from 'lodash.isstring';
+import url from 'node:url';
+import DateFns from 'date-fns';
 import BaseService from '../BaseService.js';
 import CartModel from '../../models/cart/CartModel.js';
 import CartItemService from './CartItemService.js';
 import StripeApi from '../StripeApi.js';
 import TenantService from '../TenantService.js';
 import ShipEngineApi from '../shipEngine/ShipEngineApi.js'
+import ProductVariantSkuService from '../product/ProductVariantSkuService.js';
 import { sendEmail, compileMjmlTemplate } from '../email/EmailService.js';
 import { substringOnWords, formatPrice, makeArray } from '../../utils/index.js';
+import Stripe from 'stripe';
 
 
 function makeFullName(firstName, lastName) {
@@ -29,7 +34,6 @@ export default class CartService extends BaseService {
 
     constructor() {
         super(new CartModel());
-        this.TenantService = new TenantService();
     }
 
 
@@ -99,6 +103,21 @@ export default class CartService extends BaseService {
             payment: paymentData
         }
     }
+
+    // async getOrder(knex, id) {
+    //     const Cart = await this.getClosedCart(knex, id);
+
+    //     if(!Cart) {
+    //         throw new Error('Cart not found')
+    //     }
+
+    //     const paymentData = await this.getPayment(knex, Cart.stripe_payment_intent_id);
+
+    //     return {
+    //         cart: Cart,
+    //         payment: paymentData
+    //     }
+    // }
 
 
     async getPayment(knex, stripe_payment_intent_id) {
@@ -311,12 +330,13 @@ export default class CartService extends BaseService {
 
     async sendPurchaseReceiptToBuyer(knex, id) {
         const Cart = await this.getClosedCart(knex, id);
-        const Tenant = await this.TenantService.fetchAccount(knex, knex.userParams.tenant_id);
 
         if(!Cart) {
             throw new Error('Cart not found')
         }
 
+        const TenantSvc = new TenantService();
+        const Tenant = await TenantSvc.fetchAccount(knex, this.getTenantIdFromKnex(knex));
         const orderTitle = this.getCartEmailTitle(Cart);
 
         const response = sendEmail({
@@ -335,6 +355,51 @@ export default class CartService extends BaseService {
                 sales_tax: formatPrice(Cart.sales_tax),
                 grand_total: formatPrice(Cart.grand_total)
             })
+        });
+
+        return response;
+    }
+
+
+    async sendPurchaseAlertToAdmin(knex, cartId) {
+        const Cart = await this.getClosedCart(knex, cartId);
+
+        if(!Cart) {
+            throw new Error('Cart not found')
+        }
+
+        const TenantSvc = new TenantService();
+        const Tenant = await TenantSvc.fetchAccount(knex, this.getTenantIdFromKnex(knex));
+        const orderTitle = this.getCartEmailTitle(Cart);
+
+        const response = sendEmail({
+            to: process.env.EMAIL_ADMIN,
+            subject: `NEW ORDER: ${orderTitle}`,
+            html: compileMjmlTemplate('admin-purchase-alert.mjml', {
+                baseUrl: Tenant.application_url,
+                brandName: Tenant.application_name,
+                application_logo: Tenant.application_logo,
+                id: Cart.id,
+                shipping_fullName: Cart.shipping_firstName,
+                shipping_streetAddress: Cart.shipping_streetAddress,
+                shipping_extendedAddress: Cart.shipping_extendedAddress,
+                shipping_company: Cart.shipping_company,
+                shipping_city: Cart.shipping_city,
+                shipping_state: Cart.shipping_state,
+                shipping_postalCode: Cart.shipping_postalCode,
+                shipping_countryCodeAlpha2: Cart.shipping_countryCodeAlpha2,
+                shipping_email: Cart.get('shipping_email'),
+                sub_total: formatPrice(Cart.get('sub_total')),
+                shipping_total: formatPrice(Cart.get('shipping_total')),
+                sales_tax: formatPrice(Cart.get('sales_tax')),
+                grand_total: formatPrice(Cart.get('grand_total'))
+            })
+        });
+
+        global.logger.info('RESPONSE: PostmarkService -> emailPurchaseAlertToAdmin()', {
+            meta: {
+                response
+            }
         });
 
         return response;
@@ -390,10 +455,7 @@ export default class CartService extends BaseService {
         // We can create an "Order" in Stripe now that the
         // subtotal and shipping amount are known.
         // The Stripe order will set the sales tax amount
-        const stripeOrder = await this.createStripeOrderForCart(
-            tenantId,
-            request.payload.id
-        );
+        const stripeOrder = await this.createStripeOrderForCart(knex, cartId);
 
         if(!stripeOrder) {
             throw new Error('Stripe Order returned null');
@@ -416,7 +478,7 @@ export default class CartService extends BaseService {
             meta: { cartId }
         });
 
-        const Cart = this.getActiveCart(knex, cartId);
+        const Cart = await this.getActiveCart(knex, cartId);
         if(!Cart) {
             throw new Error('Cart not found');
         }
@@ -519,6 +581,242 @@ export default class CartService extends BaseService {
         });
 
         return stripeOrder;
+    }
+
+
+    async buyShippingLabelForCart(knex, cartId) {
+        const Cart = await this.fetchOne({
+            knex: knex,
+            where: {
+                id: cartId
+            }
+        });
+
+        if(!Cart) {
+            throw new Error('Cart could not be found');
+        }
+
+        if(!Cart.selected_shipping_rate?.rate_id) {
+            throw new Error(
+                `An error occurred when creating a shipping label for Cart ${cartId}. Cart does not have a selected shipping rate value.`
+            );
+        }
+
+        const shippingLabel = await ShipEngineApi.buyShippingLabel(knex, Cart.selected_shipping_rate.rate_id);
+
+        if(!shippingLabel) {
+            throw new Error(`An error occurred when creating a shipping label for Rate ${Cart.selected_shipping_rate.rate_id}`);
+        }
+
+        if(Array.isArray(shippingLabel.errors)) {
+            global.logger.error('Errors occurred when buying a label from ShipEngine', {
+                meta: {
+                    errors: shippingLabel.errors
+                }
+            });
+
+            const errorMessages = shippingLabel.errors.map(obj => obj.message);
+            throw new Error(errorMessages.join('/n'))
+        }
+
+        return this.update({
+            knex: knex,
+            where: { id: cartId },
+            data: {
+                shipping_label: shippingLabel
+            }
+        });
+    }
+
+
+    async processTrackingWebhook(knex, requestPayload) {
+        // not all webhook status codes should be handled
+        // https://www.shipengine.com/docs/tracking/#tracking-status-codes
+        if(!requestPayload.data.tracking_number
+            || !Array.isArray(requestPayload.data.events)
+            || !['IT', 'DE', 'AT'].includes(requestPayload.data.status_code)) {
+            return;
+        }
+
+        const Cart = await knex
+            .where('closed_at', 'is not', null)
+            .whereRaw(`?? @> ?::jsonb`, [
+                'shipping_label',
+                JSON.stringify({tracking_number: requestPayload.data.tracking_number})
+            ]);
+
+        if(Cart) {
+            await this.addRelations(knex, Cart);
+            this.addVirtuals(Cart);
+
+            const TenantSvc = new TenantService();
+            const Tenant = await TenantSvc.fetchOne({
+                knex: knex,
+                where: { id: this.getTenantIdFromKnex(knex) }
+            });
+
+            if(!Tenant) {
+                throw new Error('Tenant can not be found');
+            }
+
+            const resourceUrl = new url.URL(requestPayload.resource_url);
+
+            const formatDate = (isoDate) => {
+                return DateFns.format(new Date(isoDate), 'MM/dd/yyyy');
+            }
+
+            if(Cart.shipping_email) {
+                const emailConfig = {
+                    to: Cart.shipping_email,
+                    subject: null,
+                    html: compileMjmlTemplate('order-shipped.mjml', {
+                        status_code: requestPayload.data.status_code,
+                        application_logo: Tenant.application_logo ? `${Tenant.application_logo}?class=w150` : null,
+                        brandName: Tenant.application_name,
+                        copyright: `© ${new Date().getFullYear()} ${Tenant.application_name}. All rights reserved.`,
+                        websiteUrl: Tenant.application_url,
+                        trackingNumber: requestPayload.data.tracking_number,
+                        trackingUrl: ShipEngineApi.getTrackingUrl(resourceUrl.searchParams.get('carrier_code'), requestPayload.data.tracking_number),
+                        orderNumber: Cart.id,
+                        orderDate: Cart.closed_at ? formatDate(Cart.closed_at) : '',
+                        orderDetailsUrl: Tenant.order_details_page_url ? Tenant.order_details_page_url.replace('$ORDER_ID', Cart.id) : null,
+                        id: Cart.id,
+                        shipping_phone: Cart.shipping_phone,
+                        cartItems: Cart.cart_items?.map((item) => {
+                            return {
+                                title: item.product.title,
+                                qty: item.qty,
+                                variant: item.product_variant_sku?.label,
+                                imageUrl: item.product_variant?.images?.[0]?.url // TODO: does ?class=150 need to be appended for Bunny to deliver it?
+                            }
+                        }),
+                        trackingEvents: requestPayload.data.events.map((obj) => {
+                            obj.occurred_at = obj.occurred_at ? formatDate(obj.occurred_at) : null;
+                            obj.carrier_occurred_at = obj.carrier_occurred_at ? formatDate(obj.carrier_occurred_at) : null;
+                            return obj;
+                        })
+                    })
+                };
+
+                switch(requestPayload.data.status_code) {
+                    case 'DE':
+                        emailConfig.subject = `${Tenant.application_name}: Your order has been delivered!`;
+                        break;
+
+                    case 'AT':
+                        emailConfig.subject = `${Tenant.application_name}: A delivery attempt has been made for your order!`;
+                        break;
+
+                    default:
+                        emailConfig.subject = `${Tenant.application_name}: Your order has shipped!`;
+                }
+
+                return sendEmail(emailConfig);
+            }
+        }
+    }
+
+
+    /**
+     * Submits the Stripe order
+     * https://stripe.com/docs/orders-beta/tax?html-or-react=html#submit-order
+     *
+     * @param {*} tenantId
+     * @param {*} stripeOrder
+     * @returns
+     */
+    async submitStripeOrderForCart(knex, cartId) {
+        const Cart = await this.getActiveCart(knex, cartId);
+
+        if(!Cart) {
+            throw new Error('Cart not found');
+        }
+
+        return StripeApi.submitOrder(
+            knex,
+            Cart.stripe_order_id,
+            Cart.grand_total
+        );
+    }
+
+
+    async onPaymentSuccess(knex, cartId, stripePaymentIntentId) {
+        // NOTE: Any failures that happen after this do not affect the transaction
+        // and thus should fail silently (catching and logging errors), as the user has already been changed
+        // and we can't give the impression of an overall transaction failure that may prompt them
+        // to re-do the purchase.
+        try {
+            // Close the cart
+            await this.update({
+                knex: knex,
+                where: { id: cartId },
+                data: {
+                    stripe_payment_intent_id: stripePaymentIntentId,
+                    closed_at: knex.fn.now()
+                },
+                fetchRelations: false
+            });
+
+            this.decrementInventoryCountInCart(knex, cartId);
+
+            await Promise.all([
+                this.sendPurchaseReceiptToBuyer(knex, cartId),
+                this.sendPurchaseAlertToAdmin(knex, cartId)
+            ]);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+        }
+    }
+
+
+    async decrementInventoryCountInCart(knex, cartId) {
+        global.logger.info('REQUEST: CartCtrl.decrementInventoryCountInCart', {
+            meta: {
+                cart_id: cartId
+            }
+        });
+
+        const Cart = await this.getClosedCart(knex, cartId);
+        if(!Cart) {
+            return;
+        }
+
+        const promises = [];
+        const ProductVariantSkuSvc = new ProductVariantSkuService();
+        const cartItems = Cart.cart_items || [];
+
+        for(let i=0, l=cartItems.length; i<l; i++) {
+            const product_variant_sku = cartItems[i].product_variant_sku;
+
+            if(product_variant_sku?.id) {
+                const Sku = await ProductVariantSkuSvc.fetchOne({
+                    knex: knex,
+                    where: { id: product_variant_sku.id }
+                });
+
+                if(Sku) {
+                    let newInventoryCount = Sku.inventory_count - cartItems[i].qty;
+
+                    if(newInventoryCount || newInventoryCount < 0) {
+                        newInventoryCount = 0;
+                    }
+
+                    promises.push(
+                        ProductVariantSkuSvc.update({
+                            knex: knex,
+                            where: { id: product_variant_sku.id },
+                            data: {
+                                inventory_count: newInventoryCount
+                            }
+                        })
+                    );
+                }
+            }
+        }
+
+        return Promise.all(promises);
     }
 
 
@@ -703,6 +1001,14 @@ export default class CartService extends BaseService {
         return {
             ...this.getValidationSchemaForId(),
             rate_id: Joi.string().allow(null)
+        }
+    }
+
+
+    getValidationSchemaForSaveStripePayment() {
+        return {
+            ...this.getValidationSchemaForId(),
+            stripe_payment_intent_id: Joi.string().required()
         }
     }
 

@@ -145,4 +145,140 @@ export default class CartController extends BaseController {
     }
 
 
+    /**
+     * Buys a shipping label from ShipEngine
+     *
+     * @param {*} request
+     * @param {*} h
+     * @returns {*} shipping label
+     */
+    async buyShippingLabelForCartHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: CartController.buyShippingLabelHandler', {
+                meta: request.query
+            });
+
+            const UpdatedCart = await this.service.buyShippingLabelForCart(
+                request.knex,
+                request.payload.id
+            );
+
+            global.logger.info('RESPONSE: CartController.buyShippingLabelHandler', {
+                meta: UpdatedCart
+            });
+
+            return h.apiSuccess(UpdatedCart);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
+    async trackingWebhookHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: CartController.trackingWebhookHandler', {
+                meta: request.payload
+            });
+
+            // the 'user-agent' value in the request header must be from ShipEngine
+            // https://www.shipengine.com/docs/tracking/webhooks/#validation
+            if(request.headers['user-agent'] !== 'ShipEngine/v1') {
+                throw Boom.badRequest();
+            }
+
+            await this.service.processTrackingWebhook(
+                request.knex,
+                request.payload
+            )
+
+            global.logger.info('RESPONSE: CartController.trackingWebhookHandler', {});
+
+            return h.apiSuccess();
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
+    async getPaymentHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: CartController.getPaymentHandler', {
+                meta: request.payload
+            });
+
+            const paymentData = await this.service.getOrder(
+                request.knex,
+                request.query.id
+            );
+
+            global.logger.info('RESPONSE: CartController.getPaymentHandler', {
+                meta: paymentData.payment
+            });
+
+            return h.apiSuccess(paymentData.payment);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
+    async submitStripeOrderForCartHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: CartController.submitStripeOrderForCartHandler', {
+                meta: request.payload
+            });
+
+            const submittedOrder = await this.service.submitStripeOrderForCart(request.knex, request.payload.id)
+
+            global.logger.info('RESPONSE: CartController.submitStripeOrderForCartHandler - Stripe resposne', {
+                meta: {
+                    submittedOrder
+                }
+            });
+
+            return h.apiSuccess({
+                clientSecret: submittedOrder.payment.payment_intent.client_secret
+            });
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
+
+
+    async paymentSuccessHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: CartCtrl.paymentSuccessHandler', {
+                meta: request.payload
+            });
+
+            await this.service.onPaymentSuccess(
+                request.knex,
+                request.payload.id,
+                request.payload.stripe_payment_intent_id
+            )
+
+            global.logger.info('RESPONSE: CartCtrl.onPaymentSuccess', {
+                meta: {}
+            });
+
+            return h.apiSuccess();
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
+        }
+    }
 }
