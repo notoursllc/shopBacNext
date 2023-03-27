@@ -95,8 +95,7 @@ export default class ProductVariantService extends BaseService {
 
         const ProductVariants = await this.search({
             knex: knex,
-            where: { product_id: product_id },
-            paginate: false
+            where: { product_id: product_id }
         });
 
         const promises = [];

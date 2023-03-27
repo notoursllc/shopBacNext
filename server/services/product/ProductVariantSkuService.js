@@ -180,8 +180,7 @@ export default class ProductVariantSkuService extends BaseService {
 
         const skus = await this.search({
             knex: knex,
-            where: { product_variant_id: product_variant_id },
-            paginate: false
+            where: { product_variant_id: product_variant_id }
         });
 
         const promises = [];

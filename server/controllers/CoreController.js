@@ -115,8 +115,7 @@ export default class CoreController extends BaseController {
 
             const ProductService = new ProductService();
             const Products = await ProductService.search({
-                knex: request.knex,
-                paginate: false
+                knex: request.knex
             });
 
             if(Products) {

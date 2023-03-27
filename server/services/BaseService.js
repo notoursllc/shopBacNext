@@ -35,7 +35,6 @@ export default class BaseService {
     *   where: optional
     *   data: N/A
     *   columns: optional
-    *   paginate: optional (default true)
     *   orderBy: optional
     * }
     *
@@ -73,7 +72,7 @@ export default class BaseService {
                 }
             });
 
-            const results = config.paginate !== false
+            const results = config.where?._pageSize || config.where?._page
                 ? await qb.paginate({ perPage: config.where?._pageSize || 100, currentPage: config.where?._page || 1 })
                 : await qb;
 

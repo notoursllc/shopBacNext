@@ -15,7 +15,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...PackageTypeCtrl.service.getValidationSchemaForPagination(),
+                        ...PackageTypeCtrl.service.getValidationSchemaForSearch(),
                     })
                 },
                 handler: (request, h) => {
