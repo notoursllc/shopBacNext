@@ -984,6 +984,27 @@ export default class CartService extends BaseService {
     // }
 
 
+    getValidationSchemaForSearch() {
+        const schema = {
+            ...super.getValidationSchemaForSearch()
+        }
+        schema.deleted_at = Joi.alternatives().try(
+            Joi.date(),
+            Joi.allow(null)
+        );
+        schema.closed_at = Joi.alternatives().try(
+            Joi.date(),
+            Joi.allow(null)
+        );
+        schema.shipped_at = Joi.alternatives().try(
+            Joi.date(),
+            Joi.allow(null)
+        );
+
+        return schema;
+    }
+
+
     getValidationSchemaForUpdate() {
         const schema = {
             ...super.getValidationSchemaForUpdate()

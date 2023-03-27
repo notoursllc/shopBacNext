@@ -41,7 +41,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...HeroCtrl.service.getValidationSchemaForPagination(),
+                        ...HeroCtrl.service.getValidationSchemaForSearch(),
                     })
                 },
                 handler: (request, h) => {

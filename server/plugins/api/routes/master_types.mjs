@@ -15,7 +15,7 @@ export default (server) => {
                 },
                 validate: {
                     query: Joi.object({
-                        ...MasterTypeCtrl.service.getValidationSchemaForPagination(),
+                        ...MasterTypeCtrl.service.getValidationSchemaForSearch()
                     })
                 },
                 handler: (request, h) => {
@@ -113,7 +113,5 @@ export default (server) => {
                 }
             }
         }
-
-
     ]);
 }
