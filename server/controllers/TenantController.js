@@ -71,16 +71,14 @@ export default class TenantController extends BaseController {
     async updateHandler(request, h) {
         try {
             global.logger.info('REQUEST: TenantController:updateHandler', {
-                meta: {
-                    payload: request.payload
-                }
+                meta: request.payload
             });
 
-            const Tenant = await this.service.update(
+            const Tenant = await this.service.updateTenant(
                 request.knex,
-                request.knex.userParams.tenant_id,
+                this.service.getTenantIdFromKnex(request.knex),
                 request.payload
-            )
+            );
 
             global.logger.info('RESPONSE: TenantController:updateHandler', {
                 meta: Tenant
@@ -166,6 +164,28 @@ export default class TenantController extends BaseController {
             global.logger.error(err);
             global.bugsnag(err);
             throw Boom.notFound(err);
+        }
+    }
+
+
+    async appConfigHandler(request, h) {
+        try {
+            global.logger.info('REQUEST: TenantController.appConfigHandler', {
+                meta: request.query
+            });
+
+            const result = await this.service.getAppConfig(request.knex)
+
+            global.logger.info('RESPONSE: TenantController.appConfigHandler', {
+                meta: result
+            });
+
+            return h.apiSuccess(result);
+        }
+        catch(err) {
+            global.logger.error(err);
+            global.bugsnag(err);
+            throw Boom.badRequest(err);
         }
     }
 

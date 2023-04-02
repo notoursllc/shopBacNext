@@ -13,24 +13,6 @@ export default class CoreController extends BaseController {
     }
 
 
-    async appConfigHandler(request, h) {
-        try {
-            // const data = await ProductService.search(
-            //     request.knex,
-            //     request.query
-            // );
-
-            // return h.apiSuccess(data);
-            return h.apiSuccess({ test: 'appconfig test'});
-        }
-        catch(err) {
-            // global.logger.error(err);
-            // global.bugsnag(err);
-            throw Boom.badRequest(err);
-        }
-    }
-
-
     async healthzHandler(request, h) {
         try {
             const result = await this.ProductService.fetchOne({

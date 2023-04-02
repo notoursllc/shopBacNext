@@ -55,7 +55,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return MasterTypeCtrl.upsertHandler(request, h);
+                    return MasterTypeCtrl.addMasterTypeHandler(request, h);
                 }
             }
         },
@@ -73,7 +73,7 @@ export default (server) => {
                     })
                 },
                 handler: (request, h) => {
-                    return MasterTypeCtrl.upsertHandler(request, h);
+                    return MasterTypeCtrl.updateMasterTypeHandler(request, h);
                 }
             }
         },

@@ -83,13 +83,4 @@ export default class ProductVariantModel extends BaseModel {
         }
     }
 
-
-    formatForUpsert(data) {
-        if (data.swatches) {
-            data.swatches = JSON.stringify(data.swatches)
-        }
-
-        return data;
-    }
-
 }

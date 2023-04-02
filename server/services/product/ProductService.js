@@ -80,6 +80,19 @@ export default class ProductService extends BaseService {
     }
 
 
+    formatForUpsert(data) {
+        if (data.metadata) {
+            data.metadata = JSON.stringify(data.metadata)
+        }
+
+        if (data.video) {
+            data.video = JSON.stringify(data.video)
+        }
+
+        return data;
+    }
+
+
     setUpsertSchemaAdditions(schema) {
         schema.published = schema.published.default(false);
         schema.is_good = schema.is_good.default(true);

@@ -28,7 +28,7 @@ export default class TenantService extends BaseService {
             this.ExchangeRateService.fetchRate(knex),
             this.fetchOne({
                 knex: knex,
-                where: { id: knex.userParams.tenant_id }
+                where: { id: this.getTenantIdFromKnex(knex) }
             })
         ]);
 
@@ -59,7 +59,17 @@ export default class TenantService extends BaseService {
     }
 
 
-    async update(knex, id, data) {
+    async getAppConfig(knex) {
+        const tenantExchangeRates = await this.getSupportedCurrenyRates(knex);
+
+        return {
+            CART_PRODUCT_QUANTITY_LIMIT: parseInt(process.env.CART_PRODUCT_QUANTITY_LIMIT, 10),
+            exchange_rates: tenantExchangeRates
+        };
+    }
+
+
+    async updateTenant(knex, id, data) {
         const Tenant = await this.fetchOne({
             knex: knex,
             where: { id }
@@ -92,7 +102,7 @@ export default class TenantService extends BaseService {
             }
         }
 
-        return this.update({
+        return super.update({
             knex: knex,
             where: { id },
             data: data,
@@ -103,7 +113,7 @@ export default class TenantService extends BaseService {
     async updateApiKey(knex, id) {
         const tokens = this.generateToken();
 
-        const response = this.update({
+        const response = super.update({
             knex: knex,
             where: { id },
             data: { auth_password: tokens.hashedToken }
@@ -115,7 +125,7 @@ export default class TenantService extends BaseService {
 
 
     async removeApiKey(knex, id) {
-        return this.update({
+        return super.update({
             knex: knex,
             where: { id },
             data: { auth_password: null }
@@ -237,6 +247,16 @@ export default class TenantService extends BaseService {
             token,
             hashedToken
         }
+    }
+
+
+    formatForUpsert(data) {
+        // NOTE: It looks like stingifying arrays is not needed
+        // if (data.supported_currencies) {
+        //     data.supported_currencies = JSON.stringify(data.supported_currencies)
+        // }
+
+        return data;
     }
 
 

@@ -30,12 +30,6 @@ export default class MasterTypeModel extends BaseModel {
     }
 
 
-    // formatForUpsert(data) {
-    //     if (data.metadata) {
-    //         data.metadata = JSON.stringify(data.metadata)
-    //     }
 
-    //     return data;
-    // }
 
 }

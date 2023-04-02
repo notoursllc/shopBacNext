@@ -10,13 +10,33 @@ export function getSql_enableRlsPolicyOnTable(tableName) {
 */
 export function getSql_createPolicyEnableAllBasedOnTenantId(tableName) {
     return `
-        CREATE POLICY "Enable select based on tenant_id"
+        CREATE POLICY "Enable all based on tenant_id"
         ON ${tableName}
         AS PERMISSIVE
         FOR ALL
         USING (tenant_id = current_setting('app.current_tenant')::uuid)
     `;
 };
+
+export function getSql_createPolicyEnableSelectBasedOnId(tableName) {
+    return `
+        CREATE POLICY "Enable select based on id"
+        ON ${tableName}
+        AS PERMISSIVE
+        FOR SELECT
+        USING (id = current_setting('app.current_tenant')::uuid)
+    `;
+}
+
+export function getSql_createPolicyEnableUpdateBasedOnId(tableName) {
+    return `
+        CREATE POLICY "Enable UPDATE based on id"
+        ON ${tableName}
+        AS PERMISSIVE
+        FOR UPDATE
+        USING (id = current_setting('app.current_tenant')::uuid)
+    `;
+}
 
 export function getSql_grantSelect(tableName) {
     return `

@@ -4,20 +4,7 @@ const CoreCtrl = new CoreController();
 
 export default (server) => {
     server.route([
-        {
-            method: 'GET',
-            path: '/app_config',
-            options: {
-                // auth: false,
-                // auth: {
-                //     strategies: ['storeauth']
-                // },
-                description: 'Returns public app config info',
-                handler: (request, h) => {
-                    return CoreCtrl.appConfigHandler(request, h);
-                }
-            }
-        },
+
         // {
         //     method: 'POST',
         //     path: 'logger',

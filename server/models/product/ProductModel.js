@@ -111,16 +111,6 @@ export default class ProductModel extends BaseModel {
     }
 
 
-    formatForUpsert(data) {
-        // if (data.metadata) {
-        //     data.metadata = JSON.stringify(data.metadata)
-        // }
 
-        // if (data.video) {
-        //     data.video = JSON.stringify(data.video)
-        // }
-
-        return data;
-    }
 
 }

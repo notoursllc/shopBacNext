@@ -51,12 +51,10 @@ export default class ProductVariantService extends BaseService {
 
     upsertMultiple(knex, variants, Product) {
         const promises = [];
-
         let parsedVariants;
+
         try {
-            if(isString(variants)) {
-                parsedVariants = JSON.parse(variants);
-            }
+            parsedVariants = isString(variants) ? JSON.parse(variants) : variants;
         }
         catch(err) {
             global.logger.error('UNABLE TO PARSE VARIANTS', { meta: err } );
@@ -196,6 +194,19 @@ export default class ProductVariantService extends BaseService {
                 return totalCount;
             })(variant);
         });
+
+        return data;
+    }
+
+
+    formatForUpsert(data) {
+        if (data.images) {
+            data.images = JSON.stringify(data.images)
+        }
+
+        if (data.swatches) {
+            data.swatches = JSON.stringify(data.swatches)
+        }
 
         return data;
     }

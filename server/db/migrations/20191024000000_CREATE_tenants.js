@@ -1,7 +1,8 @@
 import tables from '../utils/tables.js';
 import {
     getSql_enableRlsPolicyOnTable,
-    getSql_createPolicyEnableAllBasedOnTenantId,
+    getSql_createPolicyEnableSelectBasedOnId,
+    getSql_createPolicyEnableUpdateBasedOnId,
     getSql_grantSelectUpdate
 } from '../utils/policies.js';
 
@@ -44,14 +45,8 @@ export async function up(knex) {
         ),
 
         knex.raw( getSql_enableRlsPolicyOnTable(tableName) ),
-
-        knex.raw(`
-            CREATE POLICY "Enable select based on id"
-            ON ${tableName}
-            AS PERMISSIVE FOR SELECT
-            USING (id = current_setting('app.current_tenant')::uuid)
-        `),
-
+        knex.raw( getSql_createPolicyEnableSelectBasedOnId(tableName) ),
+        knex.raw( getSql_createPolicyEnableUpdateBasedOnId(tableName) ),
         knex.raw( getSql_grantSelectUpdate(tableName) )
     ]);
 };

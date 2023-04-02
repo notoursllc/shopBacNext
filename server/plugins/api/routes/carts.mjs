@@ -147,7 +147,7 @@ export default (server) => {
             method: 'POST',
             path: '/cart/shipping/rate',
             options: {
-                description: 'Persists a selected shipping rate for the cart.',
+                description: 'Selects a selected shipping rate for the cart.',
                 auth: {
                     strategies: ['storeauth', 'session']
                 },

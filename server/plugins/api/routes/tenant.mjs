@@ -112,6 +112,19 @@ export default (server) => {
             }
         },
         {
+            method: 'GET',
+            path: '/account/app_config',
+            options: {
+                description: 'Deletes the API key for the Tenant',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                handler: (request, h) => {
+                    return TenantCtrl.appConfigHandler(request, h);
+                }
+            }
+        },
+        {
             method: 'PUT',
             path: '/account',
             options: {
