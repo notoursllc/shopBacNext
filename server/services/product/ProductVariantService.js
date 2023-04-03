@@ -88,7 +88,10 @@ export default class ProductVariantService extends BaseService {
      */
     async deleteForProduct(knex, product_id) {
         global.logger.info('REQUEST: ProductVariantService.deleteForProduct', {
-            meta: { product_id }
+            meta: {
+                knex: this.getTenantIdFromKnex(knex),
+                product_id
+            }
         });
 
         const ProductVariants = await this.search({
@@ -179,6 +182,11 @@ export default class ProductVariantService extends BaseService {
         }
 
         return products;
+    }
+
+
+    addRelations(knex, productVariants) {
+        return this.ProductVariantSkuService.addSkuRelationsToVariants(knex, productVariants);
     }
 
 

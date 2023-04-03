@@ -129,7 +129,7 @@ export default class BaseController {
                 meta: response
             });
 
-            return h.apiSuccess(request.payload.id);
+            return h.apiSuccess(response);
         }
         catch(err) {
             global.logger.error(err);

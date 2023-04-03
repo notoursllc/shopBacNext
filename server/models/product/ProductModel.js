@@ -13,7 +13,7 @@ export default class ProductModel extends BaseModel {
     constructor() {
         super();
         this.tableName = this.tables.products;
-        this.hidden = ['tenant_id'];
+        this.hidden = ['tenant_id', 'deleted_at'];
         this.schema = {
             id: Joi.string().uuid(),
             tenant_id: Joi.string().uuid(),

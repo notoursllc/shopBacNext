@@ -12,7 +12,7 @@ export default class ProductController extends BaseController {
 
     async getStripeTaxCodesHandler(request, h) {
         try {
-            global.logger.info('REQUEST: ProductController.getStripeTaxCodesHandler', {});
+            global.logger.info('REQUEST: ProductController.getStripeTaxCodesHandler', { meta: {} });
 
             const taxCodes = await StripeApi.getTaxCodes(request.knex);
 

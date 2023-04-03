@@ -5,7 +5,11 @@ const TenantSvc = new TenantService();
 
 
 async function getStripe(knex) {
-    const Tenant = await TenantSvc.fetchAccount(knex, knex.userParams.tenant_id);
+    const Tenant = await TenantSvc.fetchOne({
+        knex: knex,
+        where: { id: TenantSvc.getTenantIdFromKnex(knex) },
+        columns: ['stripe_key']
+    });
 
     if(!Tenant) {
         throw new Error('Unable to obtain Tenant');

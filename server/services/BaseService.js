@@ -44,6 +44,10 @@ export default class BaseService {
     async search(config) {
         assertKnex(config);
 
+        global.logger.info('REQUEST: BaseService.search', {
+            meta: config
+        });
+
         try {
             const knex = config.knex;
 
@@ -111,6 +115,10 @@ export default class BaseService {
     async fetchOne(config) {
         assertKnex(config);
 
+        global.logger.info('REQUEST: BaseService.fetchOne', {
+            meta: config
+        });
+
         try {
             const qb = config.knex
                 .select(config.columns || this.model.getAllColumns())
@@ -157,6 +165,10 @@ export default class BaseService {
     async create(config) {
         assertKnex(config);
 
+        global.logger.info('REQUEST: BaseService.create', {
+            meta: config
+        });
+
         try {
             const payload = config.data ? this.prepareForUpsert(config.data) : {};
 
@@ -200,6 +212,10 @@ export default class BaseService {
         assertKnex(config);
         assertWhere(config);
         assertData(config);
+
+        global.logger.info('REQUEST: BaseService.update', {
+            meta: config
+        });
 
         try {
             const knex = config.knex;
@@ -268,6 +284,10 @@ export default class BaseService {
         assertKnex(config);
         assertWhere(config);
 
+        global.logger.info('REQUEST: BaseService.del', {
+            meta: config
+        });
+
         try {
             const Model = await this.fetchOne(config);
             if(!Model) {
@@ -276,12 +296,12 @@ export default class BaseService {
 
             const knex = config.knex;
 
-            return knex.transaction(async trx => {
+            const runDelete = async (trx) => {
                 await this.deleteRelations(trx, Model.id);
 
                 const qb = trx
                     .from(this.model.tableName)
-                    .returning(config.columns || 'id')
+                    .returning(config.columns || this.model.getAllColumns())
                     .where(config.where);
 
                 const dbResponse = this.model.isSoftDelete()
@@ -289,7 +309,18 @@ export default class BaseService {
                     : await qb.del();
 
                 return dbResponse?.[0] || {};
-            });
+            }
+
+            // If the given knex object is already a transaction then use it,
+            // otherwise create a new transaction
+            if(knex.isTransaction) {
+                return runDelete(knex);
+            }
+            else {
+                return knex.transaction((trx) => {
+                    return runDelete(trx);
+                });
+            }
         }
         catch(err) {
             global.logger.error(err);
@@ -571,7 +602,7 @@ export default class BaseService {
      * because I always forget the name of the 'userParams' object
      *
      * @param {*} knex
-     * @returns
+     * @returns string
      */
     getTenantIdFromKnex(knex) {
         return knex.userParams.tenant_id;

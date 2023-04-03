@@ -137,39 +137,44 @@ export default class ProductVariantSkuService extends BaseService {
      * @param {*} id
      */
     async deleteSku(knex, id) {
-        global.logger.info('REQUEST: ProductVariantSkuService.del', {
+        global.logger.info('REQUEST: ProductVariantSkuService.deleteSku', {
             meta: { id }
         });
 
-        const Sku = await this.fetchOne({
+        const DeletedSku = await this.del({
             knex: knex,
             where: { id: id }
         });
 
-        if(Sku) {
-            const promises = [];
+        if(DeletedSku) {
+            try {
+                const promises = [];
 
-            if(Sku.stripe_price_id) {
-                promises.push(
-                    StripeApi.archivePrice(knex, Sku.stripe_price_id)
-                );
+                if(DeletedSku.stripe_price_id) {
+                    promises.push(
+                        StripeApi.archivePrice(knex, DeletedSku.stripe_price_id)
+                    );
+                }
+
+                if(DeletedSku.stripe_product_id) {
+                    promises.push(
+                        StripeApi.archiveProduct(knex, DeletedSku.stripe_product_id)
+                    );
+                }
+
+                await Promise.all(promises);
             }
+            catch(err) {
+                // Log the error but don't throw it.  Should not affect the transaction
+                console.error(err);
 
-            if(Sku.stripe_product_id) {
-                promises.push(
-                    StripeApi.archiveProduct(knex, Sku.stripe_product_id)
-                );
+                global.logger.error('ERROR: ProductVariantSkuService.deleteSku - deleting Stripe resources', {
+                    meta: err
+                });
             }
-
-            promises.push(
-                this.del({
-                    knex: knex,
-                    where: { id: id }
-                })
-            );
-
-            return Promise.all(promises);
         }
+
+        return DeletedSku;
     }
 
 

@@ -6,6 +6,24 @@ const ProductVariantSkuCtrl = new ProductVariantSkuController();
 export default (server) => {
     server.route([
         {
+            method: 'GET',
+            path: '/product/variant/sku',
+            options: {
+                description: 'Gets a SKU',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                validate: {
+                    query: Joi.object({
+                        ...ProductVariantSkuCtrl.service.getValidationSchemaForId()
+                    })
+                },
+                handler: (request, h) => {
+                    return ProductVariantSkuCtrl.getByIdHandler(request, h)
+                }
+            }
+        },
+        {
             method: 'DELETE',
             path: '/product/variant/sku',
             options: {

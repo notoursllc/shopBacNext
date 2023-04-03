@@ -6,6 +6,24 @@ const ProductVariantCtrl = new ProductVariantController();
 export default (server) => {
     server.route([
         {
+            method: 'GET',
+            path: '/product/variant',
+            options: {
+                description: 'Gets a product variant',
+                auth: {
+                    strategies: ['storeauth', 'session']
+                },
+                validate: {
+                    query: Joi.object({
+                        ...ProductVariantCtrl.service.getValidationSchemaForId()
+                    })
+                },
+                handler: (request, h) => {
+                    return ProductVariantCtrl.getByIdHandler(request, h)
+                }
+            }
+        },
+        {
             method: 'DELETE',
             path: '/product/variant',
             options: {
